@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>UniFlow — Personal Student Dashboard (Prototype)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                screens: {
+                    'xs': '375px',
+                    'sm': '640px',
+                    'md': '768px',
+                    'lg': '1024px',
+                    'xl': '1280px',
+                    '2xl': '1536px',
+                },
+                extend: {
+                    colors: {
+                        theme: {
+                            50: 'var(--color-theme-50)',
+                            100: 'var(--color-theme-100)',
+                            200: 'var(--color-theme-200)',
+                            500: 'var(--color-theme-500)',
+                            600: 'var(--color-theme-600)',
+                            700: 'var(--color-theme-700)',
+                            900: 'var(--color-theme-900)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-surface);
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        /* HARD OVERRIDE: Prevent desktop sidebar from rendering on mobile viewports */
+        @media (max-width: 1023px) {
+            #app-sidebar {
+                display: none !important;
+            }
+        }
+
+        /* SIDEBAR COLLAPSE (desktop only) */
+        #app-sidebar {
+            transition: width 0.22s ease, opacity 0.18s ease, padding 0.22s ease;
+        }
+        #app-sidebar.sidebar-collapsed {
+            width: 0 !important;
+            min-width: 0 !important;
+            padding: 0 !important;
+            opacity: 0;
+            overflow: hidden;
+            border-right: none !important;
+            pointer-events: none;
+        }
+
+        /* FULL WEBSITE THEMING ENGINE */
+        :root[data-theme="indigo"] {
+            --color-theme-50: #fff1f2;
+            --color-theme-100: #ffe4e6;
+            --color-theme-200: #fecdd3;
+            --color-theme-500: #f43f5e;
+            --color-theme-600: #e11d48;
+            --color-theme-700: #be123c;
+            --color-theme-900: #881337;
+            --hero-gradient: linear-gradient(135deg, #e11d48 0%, #f43f5e 35%, #fb923c 70%, #fde047 100%);
+            --bg-surface: #fff8f8;
+            --card-bg: #ffffff;
+            --card-border: #fecdd3;
+        }
+
+        :root[data-theme="emerald"] {
+            --color-theme-50: #ecfdf5;
+            --color-theme-100: #d1fae5;
+            --color-theme-200: #a7f3d0;
+            --color-theme-500: #10b981;
+            --color-theme-600: #059669;
+            --color-theme-700: #047857;
+            --color-theme-900: #064e3b;
+            --hero-gradient: linear-gradient(135deg, #059669 0%, #10b981 35%, #06b6d4 70%, #a7f3d0 100%);
+            --bg-surface: #f4fbf7;
+            --card-bg: #ffffff;
+            --card-border: #a7f3d0;
+        }
+
+        :root[data-theme="rose"] {
+            --color-theme-50: #fdf2f8;
+            --color-theme-100: #fce7f3;
+            --color-theme-200: #fbcfe8;
+            --color-theme-500: #ec4899;
+            --color-theme-600: #db2777;
+            --color-theme-700: #be185d;
+            --color-theme-900: #831843;
+            --hero-gradient: linear-gradient(135deg, #db2777 0%, #ec4899 35%, #f472b6 70%, #fbcfe8 100%);
+            --bg-surface: #fdf5f9;
+            --card-bg: #ffffff;
+            --card-border: #fbcfe8;
+        }
+
+        :root[data-theme="amber"] {
+            --color-theme-50: #fffbeb;
+            --color-theme-100: #fef3c7;
+            --color-theme-200: #fde68a;
+            --color-theme-500: #f59e0b;
+            --color-theme-600: #d97706;
+            --color-theme-700: #b45309;
+            --color-theme-900: #78350f;
+            --hero-gradient: linear-gradient(135deg, #ea580c 0%, #f97316 35%, #f59e0b 70%, #fef08a 100%);
+            --bg-surface: #fdfcf7;
+            --card-bg: #ffffff;
+            --card-border: #fde68a;
+        }
+
+        :root[data-theme="ocean"] {
+            --color-theme-50: #f0f9ff;
+            --color-theme-100: #e0f2fe;
+            --color-theme-200: #bae6fd;
+            --color-theme-500: #0ea5e9;
+            --color-theme-600: #0284c7;
+            --color-theme-700: #0369a1;
+            --color-theme-900: #0c4a6e;
+            --hero-gradient: linear-gradient(135deg, #2563eb 0%, #0ea5e9 35%, #38bdf8 70%, #bae6fd 100%);
+            --bg-surface: #f4f9fd;
+            --card-bg: #ffffff;
+            --card-border: #bae6fd;
+        }
+
+        .vibrant-mesh-bg {
+            background: var(--hero-gradient);
+        }
+
+        .themed-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        @media (hover: hover) {
+            .themed-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.06);
+            }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+
+        .touch-min-target {
+            min-height: 44px;
+            min-width: 44px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- PUBLIC LANDING TOP HEADER (Visible before Signing In) -->
+    <header id="public-header" class="h-16 md:h-20 bg-white border-b border-theme-200 px-4 md:px-12 flex items-center justify-between shrink-0 z-30 shadow-sm w-full">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="bg-theme-600 text-white p-2 md:p-2.5 rounded-xl md:rounded-2xl shadow-lg shadow-theme-500/30 shrink-0">
+                <i data-lucide="layers" class="w-5 h-5 md:w-6 md:h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-black text-base xs:text-lg md:text-xl text-slate-900 tracking-tight leading-none">UniFlow</h1>
+                <span class="text-[8px] xs:text-[9px] md:text-[10px] font-black uppercase tracking-widest text-theme-600 mt-0.5 block">Student OS</span>
+            </div>
+        </div>
+        <button onclick="launchOnboardingFlow()" class="touch-min-target px-4 py-2 md:px-6 md:py-2.5 bg-theme-600 hover:bg-theme-500 active:scale-95 text-white font-extrabold text-xs rounded-xl md:rounded-2xl shadow-md shadow-theme-500/20 transition-all flex items-center gap-1.5 md:gap-2">
+            <i data-lucide="log-in" class="w-3.5 h-3.5 md:w-4 md:h-4"></i>
+            <span>Sign In</span>
+        </button>
+    </header>
+
+    <!-- TWO-STEP ONBOARDING / SIGN-IN MODAL -->
+    <div id="onboarding-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-2.5 xs:p-4 hidden">
+        <div class="bg-white/95 rounded-2xl md:rounded-3xl max-w-2xl w-full p-4 xs:p-6 md:p-8 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar border border-white space-y-4 xs:space-y-6 relative">
+            
+            <!-- STEP 1: PREFERENCES -->
+            <div id="onboarding-step-1" class="space-y-4 xs:space-y-6">
+                <div class="flex items-center gap-3 md:gap-4">
+                    <div class="p-2.5 md:p-3.5 bg-theme-50 text-theme-600 rounded-xl md:rounded-2xl shadow-inner border border-theme-100 shrink-0">
+                        <i data-lucide="sparkles" class="w-5 h-5 md:w-7 md:h-7"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg xs:text-xl md:text-2xl font-black text-slate-900 tracking-tight">Sign In & Personalize</h2>
+                        <p class="text-[10px] xs:text-xs font-semibold text-slate-500">Step 1 of 2: Set up your student profile</p>
+                    </div>
+                </div>
+                
+                <form onsubmit="goToOnboardingStep2(event)" class="space-y-4 md:space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Your Name</label>
+                        <input type="text" id="onboarding-name" placeholder="e.g. Alex Morgan" class="w-full p-3 md:p-3.5 rounded-xl md:rounded-2xl border border-slate-200 focus:ring-2 focus:ring-theme-500 text-xs md:text-sm font-semibold text-slate-800 bg-slate-50/50 transition-all" required>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Field of Study</label>
+                            <select id="onboarding-field" onchange="toggleCustomField('onboarding')" class="w-full p-3 md:p-3.5 rounded-xl md:rounded-2xl border border-slate-200 focus:ring-2 focus:ring-theme-500 text-xs md:text-sm font-semibold text-slate-800 bg-slate-50/50 transition-all" required>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Business & Finance">Business & Finance</option>
+                                <option value="Arts & Design">Arts & Design</option>
+                                <option value="Biology & Health">Biology & Health</option>
+                                <option value="Other">Other (Specify Major)</option>
+                            </select>
+                            <input type="text" id="onboarding-field-other" placeholder="Write your major here..." class="w-full mt-2 p-3 rounded-xl border border-slate-200 text-xs font-semibold bg-white hidden">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Year of Study</label>
+                            <select id="onboarding-year" class="w-full p-3 md:p-3.5 rounded-xl md:rounded-2xl border border-slate-200 focus:ring-2 focus:ring-theme-500 text-xs md:text-sm font-semibold text-slate-800 bg-slate-50/50 transition-all" required>
+                                <option value="Year 1" selected>Year 1</option>
+                                <option value="Year 2">Year 2</option>
+                                <option value="Year 3">Year 3</option>
+                                <option value="Year 4">Year 4</option>
+                                <option value="Postgraduate">Postgraduate</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Choose Visual Theme Accent</label>
+                        <div class="flex items-center gap-2.5 bg-slate-50/80 p-2.5 rounded-xl md:rounded-2xl border border-slate-200 overflow-x-auto">
+                            <button type="button" onclick="setTheme('indigo')" class="touch-min-target w-7 h-7 md:w-8 md:h-8 rounded-full bg-rose-500 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Sunset Coral"></button>
+                            <button type="button" onclick="setTheme('emerald')" class="touch-min-target w-7 h-7 md:w-8 md:h-8 rounded-full bg-emerald-600 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Emerald Pulse"></button>
+                            <button type="button" onclick="setTheme('rose')" class="touch-min-target w-7 h-7 md:w-8 md:h-8 rounded-full bg-pink-600 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Berry Pink"></button>
+                            <button type="button" onclick="setTheme('amber')" class="touch-min-target w-7 h-7 md:w-8 md:h-8 rounded-full bg-amber-500 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Warm Amber"></button>
+                            <button type="button" onclick="setTheme('ocean')" class="touch-min-target w-7 h-7 md:w-8 md:h-8 rounded-full bg-sky-500 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Ocean Breeze"></button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 md:mb-3">What matters to you?</label>
+                        <div id="interests-grid" class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2">
+                            <!-- Dynamic checkboxes -->
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <button type="button" onclick="closeOnboardingModal()" class="text-xs font-extrabold text-slate-400 hover:text-slate-600 p-2">Cancel</button>
+                        <button type="submit" class="touch-min-target px-4 py-3 md:px-6 md:py-3.5 bg-theme-600 hover:bg-theme-500 text-white font-black rounded-xl md:rounded-2xl shadow-lg shadow-theme-500/30 transition-all flex items-center gap-2 text-xs md:text-sm">
+                            <span>Next: Connect Platforms</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- STEP 2: APP INTEGRATIONS -->
+            <div id="onboarding-step-2" class="space-y-4 xs:space-y-6 hidden">
+                <div class="flex items-center gap-3 md:gap-4">
+                    <div class="p-2.5 md:p-3.5 bg-theme-50 text-theme-600 rounded-xl md:rounded-2xl shadow-inner border border-theme-100 shrink-0">
+                        <i data-lucide="plug" class="w-5 h-5 md:w-7 md:h-7"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg xs:text-xl md:text-2xl font-black text-slate-900 tracking-tight">Connect Your Platforms</h2>
+                        <p class="text-[10px] xs:text-xs font-semibold text-slate-500">Step 2 of 2: Select which university apps you use</p>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded-xl md:rounded-2xl border border-amber-200 flex items-center gap-2 text-[10px] xs:text-xs text-amber-800 font-semibold leading-relaxed">
+                    <i data-lucide="info" class="w-4 h-4 shrink-0 text-amber-600"></i>
+                    <span>Prototype connections demonstrate how UniFlow centralizes updates without real account authentication.</span>
+                </div>
+
+                <div id="onboarding-apps-grid" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-3">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <button type="button" onclick="backToOnboardingStep1()" class="text-xs font-black text-slate-500 hover:text-slate-800 p-2 transition-colors">← Back</button>
+                    <button type="button" onclick="finishOnboarding()" class="touch-min-target px-4 py-3 md:px-6 md:py-3.5 bg-theme-600 hover:bg-theme-500 text-white font-black rounded-xl md:rounded-2xl shadow-lg shadow-theme-500/30 transition-all flex items-center gap-2 text-xs md:text-sm">
+                        <span>Launch Dashboard</span>
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MAIN APP STRUCTURE -->
+    <div class="flex-1 flex flex-col lg:flex-row h-screen overflow-hidden">
+        
+        <!-- DESKTOP SIDEBAR (Strictly hidden on mobile/tablet via CSS, flex on lg+ when signed in) -->
+        <aside id="app-sidebar" class="hidden flex-col w-64 border-r border-theme-200 bg-white z-20 shadow-xl shrink-0">
+            <div class="p-6 flex items-center justify-between border-b border-theme-100">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="bg-theme-600 text-white p-2.5 rounded-2xl shadow-lg shadow-theme-500/30 shrink-0">
+                        <i data-lucide="layers" class="w-6 h-6"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="font-black text-xl text-slate-900 tracking-tight leading-none truncate">UniFlow</h1>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-theme-600 mt-1 block">Student OS</span>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" id="sidebar-collapse-btn" aria-label="Collapse sidebar" class="touch-min-target p-2 rounded-xl text-slate-400 hover:text-theme-600 hover:bg-theme-50 transition-colors shrink-0">
+                    <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar" role="navigation" aria-label="Main">
+                <button onclick="switchView('home')" id="nav-home" aria-current="page" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-xs transition-all bg-theme-50 text-theme-600 shadow-sm border border-theme-100">
+                    <i data-lucide="home" class="w-4 h-4"></i> Home Page
+                </button>
+                <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-extrabold text-xs transition-all text-slate-600 hover:bg-theme-50 hover:text-theme-600">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </button>
+                <button onclick="switchView('announcements')" id="nav-announcements" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-extrabold text-xs transition-all text-slate-600 hover:bg-theme-50 hover:text-theme-600">
+                    <i data-lucide="megaphone" class="w-4 h-4"></i> Announcements
+                </button>
+                <button onclick="switchView('academics')" id="nav-academics" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-extrabold text-xs transition-all text-slate-600 hover:bg-theme-50 hover:text-theme-600">
+                    <i data-lucide="book-open" class="w-4 h-4"></i> Academics
+                </button>
+                <button onclick="switchView('calendar')" id="nav-calendar" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-extrabold text-xs transition-all text-slate-600 hover:bg-theme-50 hover:text-theme-600">
+                    <i data-lucide="calendar" class="w-4 h-4"></i> Calendar
+                </button>
+                <button onclick="switchView('opportunities')" id="nav-opportunities" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-extrabold text-xs transition-all text-slate-600 hover:bg-theme-50 hover:text-theme-600">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i> Opportunities
+                </button>
+                <button onclick="switchView('events')" id="nav-events" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-extrabold text-xs transition-all text-slate-600 hover:bg-theme-50 hover:text-theme-600">
+                    <i data-lucide="compass" class="w-4 h-4"></i> Campus Events
+                </button>
+                <button onclick="switchView('integrations')" id="nav-integrations" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-extrabold text-xs transition-all text-slate-600 hover:bg-theme-50 hover:text-theme-600">
+                    <i data-lucide="plug" class="w-4 h-4"></i> Connected Apps
+                </button>
+                <button onclick="switchView('problem-solution')" id="nav-problem-solution" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-extrabold text-xs transition-all text-slate-600 hover:bg-theme-50 hover:text-theme-600">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i> Problem & Solution
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-theme-100">
+                <button onclick="switchView('profile')" id="nav-profile" class="w-full flex items-center justify-between p-3 rounded-2xl bg-theme-50 hover:bg-theme-100 border border-theme-200 transition-all group">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div id="user-avatar" class="w-9 h-9 rounded-xl bg-theme-600 text-white font-black flex items-center justify-center text-xs shadow-md shadow-theme-500/20 group-hover:scale-105 transition-transform shrink-0">
+                            AM
+                        </div>
+                        <div class="text-left min-w-0">
+                            <p id="sidebar-user-name" class="text-xs font-black text-slate-900 leading-none truncate">Alex Morgan</p>
+                            <p id="user-profile-sub" class="text-[10px] font-bold text-slate-500 mt-1 truncate">Computer Science · Yr 1</p>
+                        </div>
+                    </div>
+                    <i data-lucide="settings" class="w-4 h-4 text-slate-400 group-hover:text-theme-600 transition-colors shrink-0 ml-1"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            
+            <!-- HEADER BAR (Hidden until user Signs In) -->
+            <header id="app-header" class="hidden h-16 md:h-20 border-b border-theme-200 bg-white px-3 xs:px-4 md:px-8 items-center justify-between shrink-0 shadow-sm z-10">
+                <div class="flex items-center gap-2.5 md:gap-4 min-w-0">
+                    <button onclick="toggleMobileMenu()" aria-label="Open navigation menu" class="lg:hidden touch-min-target p-2 rounded-xl text-slate-700 bg-theme-50 border border-theme-100 hover:bg-theme-100 shrink-0">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="toggleSidebar()" id="sidebar-expand-btn" aria-label="Expand sidebar" class="hidden touch-min-target p-2 rounded-xl text-slate-700 bg-theme-50 border border-theme-100 hover:bg-theme-100 shrink-0">
+                        <i data-lucide="panel-left-open" class="w-5 h-5"></i>
+                    </button>
+                    <h2 id="page-title" class="text-sm xs:text-base md:text-xl font-black text-slate-900 tracking-tight truncate">Home Page</h2>
+                </div>
+
+                <div class="flex items-center gap-2 md:gap-4 shrink-0">
+                    <!-- Global Search -->
+                    <div class="relative hidden sm:block w-40 sm:w-56 md:w-72">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="global-search" aria-label="Search announcements" oninput="handleGlobalSearch(this.value)" placeholder="Search announcements..." class="w-full pl-9 pr-3 py-2 text-xs bg-theme-50/50 border border-theme-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-theme-500 focus:bg-white text-slate-800 font-semibold transition-all">
+                    </div>
+
+                    <!-- Notification Dropdown -->
+                    <div class="relative">
+                        <button onclick="toggleNotifications()" aria-label="View notifications" aria-haspopup="true" class="touch-min-target p-2 md:p-2.5 rounded-xl md:rounded-2xl bg-theme-50 hover:bg-theme-100 border border-theme-200 text-slate-700 relative transition-all">
+                            <i data-lucide="bell" class="w-4 h-4 md:w-5 md:h-5"></i>
+                            <span id="notif-badge" class="absolute top-1.5 right-1.5 w-2 h-2 md:w-2.5 md:h-2.5 bg-theme-600 rounded-full border-2 border-white"></span>
+                        </button>
+                        
+                        <div id="notif-dropdown" class="hidden absolute right-0 mt-3 w-72 xs:w-80 sm:w-96 bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-theme-100 z-50 p-4 md:p-5 space-y-3">
+                            <div class="flex items-center justify-between pb-2 border-b border-theme-100">
+                                <h3 class="font-black text-slate-900 text-xs md:text-sm">Notifications</h3>
+                                <button onclick="clearNotifications()" class="text-[11px] md:text-xs font-extrabold text-theme-600 hover:underline">Clear all</button>
+                            </div>
+                            <div id="notif-list" class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar">
+                                <!-- Dynamic notifications -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MOBILE NAV DRAWER -->
+            <div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md lg:hidden">
+                <div class="w-72 max-w-[85vw] bg-white h-full p-4 xs:p-5 flex flex-col justify-between shadow-2xl overflow-y-auto">
+                    <div>
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                            <div class="flex items-center gap-2.5">
+                                <div class="bg-theme-600 text-white p-2 rounded-xl">
+                                    <i data-lucide="layers" class="w-5 h-5"></i>
+                                </div>
+                                <span class="font-black text-slate-900 text-base tracking-tight">UniFlow</span>
+                            </div>
+                            <button onclick="toggleMobileMenu()" aria-label="Close navigation menu" class="p-2 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+                        </div>
+                        <nav class="space-y-1">
+                            <button onclick="switchView('home'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="home" class="w-4 h-4"></i> Home Page</button>
+                            <button onclick="switchView('dashboard'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</button>
+                            <button onclick="switchView('announcements'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="megaphone" class="w-4 h-4"></i> Announcements</button>
+                            <button onclick="switchView('academics'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="book-open" class="w-4 h-4"></i> Academics</button>
+                            <button onclick="switchView('calendar'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="calendar" class="w-4 h-4"></i> Calendar</button>
+                            <button onclick="switchView('opportunities'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="briefcase" class="w-4 h-4"></i> Opportunities</button>
+                            <button onclick="switchView('events'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="compass" class="w-4 h-4"></i> Campus Events</button>
+                            <button onclick="switchView('integrations'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="plug" class="w-4 h-4"></i> Connected Apps</button>
+                            <button onclick="switchView('problem-solution'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-theme-50 touch-min-target"><i data-lucide="help-circle" class="w-4 h-4"></i> Problem & Solution</button>
+                        </nav>
+                    </div>
+                    <button onclick="switchView('profile'); toggleMobileMenu();" class="w-full flex items-center gap-3 p-3 bg-theme-50 rounded-xl border border-theme-200 mt-4">
+                        <div class="w-8 h-8 rounded-xl bg-theme-600 text-white font-bold flex items-center justify-center text-xs shrink-0">AM</div>
+                        <div class="text-left text-xs min-w-0">
+                            <p id="mobile-user-name" class="font-black text-slate-800 truncate">Alex Morgan</p>
+                            <p class="text-slate-500 font-semibold truncate">Edit Preferences</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW PANEL CONTAINER -->
+            <main id="main-content" class="flex-1 overflow-y-auto custom-scrollbar">
+                
+                <!-- VIEW 0: LANDING / HOME PAGE -->
+                <div id="view-home" class="view-panel space-y-0">
+                    
+                    <!-- HERO SECTION WITH VIBRANT ARTISTIC GRADIENT AND FLOATING DECORATIVE SHAPES -->
+                    <div class="vibrant-mesh-bg text-white pt-6 xs:pt-8 pb-12 md:pt-12 md:pb-20 px-3 xs:px-4 md:px-12 relative overflow-hidden shadow-xl">
+                        
+                        <!-- Floating organic circles in background -->
+                        <div class="absolute -top-10 -right-10 w-48 xs:w-64 md:w-96 h-48 xs:h-64 md:h-96 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="absolute bottom-0 left-1/4 w-36 xs:w-48 md:w-80 h-36 xs:h-48 md:h-80 bg-yellow-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                        <div class="max-w-5xl mx-auto space-y-4 md:space-y-6 relative z-10">
+                            
+                            <!-- DYNAMIC POST-ONBOARDING WELCOME CARD -->
+                            <div id="home-welcome-banner" class="hidden p-3.5 xs:p-4 md:p-5 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl md:rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4 shadow-xl">
+                                <div class="flex items-center gap-3 md:gap-4">
+                                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white text-theme-600 flex items-center justify-center font-black text-xl md:text-2xl shadow-lg shrink-0">
+                                        👋
+                                    </div>
+                                    <div>
+                                        <h3 id="welcome-banner-title" class="text-sm xs:text-base md:text-lg font-black text-white">Welcome back, Alex!</h3>
+                                        <p id="welcome-banner-sub" class="text-[10px] xs:text-[11px] md:text-xs font-extrabold text-white/90 mt-0.5">Your personalized feed for Computer Science · Year 1 is active.</p>
+                                    </div>
+                                </div>
+                                <button onclick="switchView('dashboard')" class="touch-min-target w-full md:w-auto px-5 py-2.5 bg-white text-theme-600 hover:bg-theme-50 font-black rounded-xl md:rounded-2xl text-xs shadow-lg transition-all active:scale-95">
+                                    Go to My Dashboard →
+                                </button>
+                            </div>
+
+                            <div class="inline-flex items-center gap-1.5 xs:gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] xs:text-[11px] md:text-xs font-black text-white border border-white/30 shadow-sm max-w-full">
+                                <span class="shrink-0">✨</span> <span class="truncate">Intelligent Student OS Prototype</span>
+                            </div>
+
+                            <h1 class="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-tight max-w-3xl break-words">
+                                One Central App For All Your Student Life Needs
+                            </h1>
+
+                            <p class="text-white/90 text-xs sm:text-sm md:text-lg max-w-2xl font-semibold leading-relaxed">
+                                Stop juggling disparate campus platforms. UniFlow merges assignment deadlines, club announcements, and high-value scholarships into one clean, interactive feed.
+                            </p>
+
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 md:gap-3 pt-2 md:pt-4">
+                                <button id="home-primary-btn" onclick="handleHomePrimaryClick()" class="touch-min-target px-5 py-3 md:px-8 md:py-4 bg-white text-theme-600 hover:bg-theme-50 active:scale-95 font-black rounded-xl md:rounded-2xl shadow-2xl transition-all flex items-center justify-center gap-2.5 text-xs md:text-sm">
+                                    <span id="home-btn-text">Sign In / Personalize Profile</span>
+                                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="switchView('problem-solution')" class="touch-min-target px-5 py-3 md:px-8 md:py-4 bg-black/20 hover:bg-black/30 text-white font-black rounded-xl md:rounded-2xl backdrop-blur-md transition-all text-xs md:text-sm border border-white/20 text-center">
+                                    View Problem & Solution
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ORGANIC WAVE SVG DIVIDER -->
+                    <div class="w-full overflow-hidden leading-none -mt-1">
+                        <svg class="relative block w-full h-6 xs:h-8 md:h-20" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                            <path d="M0,0 C150,90 350,-40 500,60 C650,160 900,10 1200,40 L1200,120 L0,120 Z" fill="var(--bg-surface)"></path>
+                        </svg>
+                    </div>
+
+                    <!-- CONTENT SECTION BELOW WAVE -->
+                    <div class="max-w-6xl mx-auto px-3 xs:px-4 md:px-12 py-4 xs:py-6 md:py-8 space-y-5 md:space-y-10">
+                        
+                        <!-- Pipeline Overview Banner -->
+                        <div class="p-3.5 xs:p-4 md:p-6 themed-card rounded-2xl md:rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
+                            <span class="text-[9px] xs:text-[10px] md:text-xs font-black tracking-widest text-slate-400 uppercase">CORE ARCHITECTURE</span>
+                            <div class="flex flex-wrap items-center justify-center gap-1 md:gap-4 text-[10px] xs:text-[11px] md:text-xs font-black text-theme-600">
+                                <span class="px-2 py-1 md:px-3 md:py-1.5 bg-theme-50 rounded-lg md:rounded-xl border border-theme-100">1. COLLECT</span>
+                                <span>→</span>
+                                <span class="px-2 py-1 md:px-3 md:py-1.5 bg-theme-50 rounded-lg md:rounded-xl border border-theme-100">2. FILTER</span>
+                                <span>→</span>
+                                <span class="px-2 py-1 md:px-3 md:py-1.5 bg-theme-50 rounded-lg md:rounded-xl border border-theme-100">3. PRIORITIZE</span>
+                                <span>→</span>
+                                <span class="px-2 py-1 md:px-3 md:py-1.5 bg-theme-50 rounded-lg md:rounded-xl border border-theme-100">4. ACT</span>
+                            </div>
+                        </div>
+
+                        <!-- Key Pillars Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 xs:gap-4 md:gap-6">
+                            <div class="themed-card p-4 xs:p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-md space-y-2.5 md:space-y-4">
+                                <div class="w-10 h-10 md:w-12 md:h-12 bg-theme-50 text-theme-600 rounded-xl md:rounded-2xl flex items-center justify-center font-bold shadow-inner border border-theme-100">
+                                    <i data-lucide="layers" class="w-5 h-5 md:w-6 md:h-6"></i>
+                                </div>
+                                <h3 class="font-black text-slate-900 text-base md:text-lg">Centralized Ingestion</h3>
+                                <p class="text-xs font-semibold text-slate-500 leading-relaxed">Centralizes updates across LMS platforms, Google Calendar, and university email feeds.</p>
+                            </div>
+
+                            <div class="themed-card p-4 xs:p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-md space-y-2.5 md:space-y-4">
+                                <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-50 text-amber-600 rounded-xl md:rounded-2xl flex items-center justify-center font-bold shadow-inner border border-amber-100">
+                                    <i data-lucide="clock" class="w-5 h-5 md:w-6 md:h-6"></i>
+                                </div>
+                                <h3 class="font-black text-slate-900 text-base md:text-lg">Intelligent Workload</h3>
+                                <p class="text-xs font-semibold text-slate-500 leading-relaxed">Identifies high-priority deadlines and flags heavy study workload peaks before midterms arrive.</p>
+                            </div>
+
+                            <div class="themed-card p-4 xs:p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-md space-y-2.5 md:space-y-4">
+                                <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 text-emerald-600 rounded-xl md:rounded-2xl flex items-center justify-center font-bold shadow-inner border border-emerald-100">
+                                    <i data-lucide="briefcase" class="w-5 h-5 md:w-6 md:h-6"></i>
+                                </div>
+                                <h3 class="font-black text-slate-900 text-base md:text-lg">Matched Opportunities</h3>
+                                <p class="text-xs font-semibold text-slate-500 leading-relaxed">Matches your field of study with tailored scholarships, research grants, and paid internships.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- VIEW 1: DASHBOARD -->
+                <div id="view-dashboard" class="view-panel space-y-5 xs:space-y-6 md:space-y-8 p-3 xs:p-4 md:p-8 max-w-7xl mx-auto hidden">
+                    <!-- Hero Banner -->
+                    <div class="relative overflow-hidden rounded-2xl md:rounded-3xl vibrant-mesh-bg p-4 xs:p-5 md:p-10 text-white shadow-xl">
+                        <div class="relative z-10">
+                            <span class="px-2.5 py-0.5 md:px-3.5 md:py-1 bg-white/20 backdrop-blur-md rounded-full text-[9px] xs:text-[10px] md:text-xs font-bold text-white inline-block mb-2 md:mb-3 border border-white/20">✨ Personal Command Center</span>
+                            <h1 id="dashboard-greeting" class="text-xl xs:text-2xl md:text-4xl font-black tracking-tight break-words">Good day 👋</h1>
+                            <p class="text-white/90 mt-0.5 md:mt-1 text-xs md:text-base font-semibold">Here’s what needs your attention today.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-8">
+                        <!-- Left 2 Columns -->
+                        <div class="lg:col-span-2 space-y-5 md:space-y-8">
+                            
+                            <!-- Priority Section -->
+                            <section class="space-y-3 md:space-y-4">
+                                <div class="flex items-center justify-between gap-2">
+                                    <h2 class="text-sm xs:text-base md:text-lg font-black text-slate-900 flex items-center gap-1.5 md:gap-2">
+                                        <i data-lucide="clock" class="w-4 h-4 md:w-5 md:h-5 text-amber-500 shrink-0"></i>
+                                        <span>Priority Responsibilities</span>
+                                    </h2>
+                                    <span id="priority-count" class="text-[9px] xs:text-[10px] md:text-xs font-extrabold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full shadow-sm shrink-0">0 Pending</span>
+                                </div>
+                                <div id="priority-tasks-list" class="space-y-2.5 md:space-y-3">
+                                    <!-- Dynamic tasks -->
+                                </div>
+                            </section>
+
+                            <!-- Important For You Section -->
+                            <section class="space-y-3 md:space-y-4">
+                                <div class="flex items-center justify-between gap-2">
+                                    <h2 class="text-sm xs:text-base md:text-lg font-black text-slate-900 flex items-center gap-1.5 md:gap-2">
+                                        <i data-lucide="flag" class="w-4 h-4 md:w-5 md:h-5 text-theme-600 shrink-0"></i>
+                                        <span>🚩 Important for You</span>
+                                    </h2>
+                                    <span class="text-[9px] xs:text-[10px] md:text-[11px] font-black text-theme-600 bg-theme-50 border border-theme-100 px-2.5 py-1 rounded-full shadow-sm shrink-0">Matches Preferences</span>
+                                </div>
+                                <div id="important-feed" class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                                    <!-- Dynamic recommendations -->
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="space-y-5 md:space-y-6">
+                            <!-- Workload Indicator Widget -->
+                            <div class="themed-card p-4 xs:p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-sm space-y-3 md:space-y-4">
+                                <h3 class="font-extrabold text-slate-900 text-xs md:text-sm flex items-center gap-2">
+                                    <i data-lucide="activity" class="w-4 h-4 text-theme-600"></i>
+                                    Weekly Workload Indicator
+                                </h3>
+                                <div class="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl md:rounded-2xl">
+                                    <span class="text-xs text-slate-700 font-bold">Current Load</span>
+                                    <span class="px-2.5 py-1 bg-amber-200/80 text-amber-900 text-[11px] md:text-xs font-black rounded-full shadow-sm">
+                                        🟡 Moderate
+                                    </span>
+                                </div>
+                                <div class="p-3 bg-theme-50/50 rounded-xl md:rounded-2xl border border-theme-100">
+                                    <p class="text-[9px] md:text-[10px] font-black uppercase tracking-wider text-slate-400">Busiest Day Identified</p>
+                                    <p class="text-xs font-extrabold text-slate-800 mt-1">Thursday (Calculus I Quiz & Assignment)</p>
+                                </div>
+                            </div>
+
+                            <!-- Mini Schedule Widget -->
+                            <div class="themed-card p-4 xs:p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-sm space-y-3 md:space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="font-extrabold text-slate-900 text-xs md:text-sm">Upcoming This Week</h3>
+                                    <button onclick="switchView('calendar')" class="text-xs font-extrabold text-theme-600 hover:underline p-1">View All</button>
+                                </div>
+                                <div id="dashboard-mini-calendar" class="space-y-2.5 md:space-y-3">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: ANNOUNCEMENTS -->
+                <div id="view-announcements" class="view-panel space-y-4 md:space-y-6 p-3 xs:p-4 md:p-8 max-w-7xl mx-auto hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h1 class="text-xl xs:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Announcements Feed</h1>
+                            <p class="text-slate-500 text-xs md:text-sm font-semibold mt-0.5">Centralized updates across academic boards, clubs, and admin offices.</p>
+                        </div>
+                        <span class="text-[10px] md:text-[11px] font-extrabold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 self-start sm:self-auto">
+                            Demo Data Feed
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 xs:gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                        <button onclick="filterAnnouncements('All')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-black bg-theme-600 text-white shadow-md shadow-theme-500/20 whitespace-nowrap transition-all">All</button>
+                        <button onclick="filterAnnouncements('Academics')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Academics</button>
+                        <button onclick="filterAnnouncements('Opportunities')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Opportunities</button>
+                        <button onclick="filterAnnouncements('Events')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Events</button>
+                        <button onclick="filterAnnouncements('Careers')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Careers</button>
+                        <button onclick="filterAnnouncements('Scholarships')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Scholarships</button>
+                    </div>
+
+                    <div id="announcements-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 xs:gap-4 md:gap-6">
+                        <!-- Dynamic announcements -->
+                    </div>
+                </div>
+
+                <!-- VIEW 3: ACADEMICS -->
+                <div id="view-academics" class="view-panel space-y-4 md:space-y-6 p-3 xs:p-4 md:p-8 max-w-7xl mx-auto hidden">
+                    <div>
+                        <h1 class="text-xl xs:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Academic Deadlines</h1>
+                        <p class="text-slate-500 text-xs md:text-sm font-semibold mt-0.5">Track exams, problem sets, and lab submissions in one place.</p>
+                    </div>
+
+                    <div class="themed-card p-4 xs:p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
+                        <div class="flex items-center gap-3 md:gap-4">
+                            <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xl md:text-2xl shadow-inner border border-amber-200 shrink-0">
+                                🟡
+                            </div>
+                            <div>
+                                <p class="text-[9px] md:text-[10px] font-black uppercase tracking-wider text-slate-400">Current Workload</p>
+                                <h3 class="text-base md:text-lg font-black text-slate-900">Moderate Workload Week</h3>
+                                <p class="text-xs font-semibold text-slate-500 mt-0.5">2 major deliverables scheduled for completion this week.</p>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-theme-50 rounded-xl md:rounded-2xl border border-theme-100 text-xs w-full md:w-auto">
+                            <span class="text-slate-400 font-black uppercase block text-[9px] md:text-[10px]">Your Busiest Day</span>
+                            <span class="font-black text-slate-800">Thursday, Sep 10 (2 Items)</span>
+                        </div>
+                    </div>
+
+                    <div class="themed-card rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm space-y-3 md:space-y-4">
+                        <h3 class="font-extrabold text-slate-900 text-sm md:text-base">Coursework Deliverables</h3>
+                        <div id="academic-deadlines-list" class="space-y-2.5 md:space-y-3">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 4: CALENDAR -->
+                <div id="view-calendar" class="view-panel space-y-4 md:space-y-6 p-3 xs:p-4 md:p-8 max-w-7xl mx-auto hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h1 class="text-xl xs:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Schedule Calendar</h1>
+                            <p class="text-slate-500 text-xs md:text-sm font-semibold mt-0.5">Unified view of classes, deadlines, and campus events.</p>
+                        </div>
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <button onclick="navigateCalendar(-1)" class="touch-min-target px-3 py-1.5 md:px-3.5 md:py-2 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl md:rounded-2xl border border-slate-200 transition-colors shadow-sm">← Prev</button>
+                            <button onclick="navigateCalendar(0)" class="touch-min-target px-3 py-1.5 md:px-3.5 md:py-2 bg-theme-50 hover:bg-theme-100 text-theme-600 font-black text-xs rounded-xl md:rounded-2xl border border-theme-200 transition-colors shadow-sm">Today</button>
+                            <button onclick="navigateCalendar(1)" class="touch-min-target px-3 py-1.5 md:px-3.5 md:py-2 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl md:rounded-2xl border border-slate-200 transition-colors shadow-sm">Next →</button>
+                        </div>
+                    </div>
+
+                    <div class="themed-card rounded-2xl md:rounded-3xl p-3 xs:p-4 md:p-6 shadow-sm overflow-x-auto space-y-3 md:space-y-4">
+                        <div class="flex items-center justify-between border-b border-theme-100 pb-3">
+                            <h2 id="calendar-month-heading" class="text-base xs:text-lg md:text-xl font-black text-slate-900">September 2026</h2>
+                            <span class="text-[10px] md:text-xs font-bold text-slate-400">Demo Academic Term</span>
+                        </div>
+
+                        <div class="w-full min-w-[300px]">
+                            <div class="grid grid-cols-7 gap-1 xs:gap-1.5 md:gap-2 mb-2 text-center font-black text-[9px] xs:text-[10px] md:text-xs text-slate-400">
+                                <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+                            </div>
+                            <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 xs:gap-1.5 md:gap-2">
+                                <!-- Calendar days populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 5: OPPORTUNITIES -->
+                <div id="view-opportunities" class="view-panel space-y-4 md:space-y-6 p-3 xs:p-4 md:p-8 max-w-7xl mx-auto hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h1 class="text-xl xs:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Opportunities Hub</h1>
+                            <p class="text-slate-500 text-xs md:text-sm font-semibold mt-0.5">Curated scholarships, internships, and competitions tailored for you.</p>
+                        </div>
+                        <button onclick="showDataPipelineModal()" class="touch-min-target px-3.5 py-2 md:px-4 md:py-2.5 bg-theme-50 hover:bg-theme-100 text-theme-600 font-extrabold text-xs rounded-xl md:rounded-2xl border border-theme-200 transition-colors flex items-center gap-2 self-start sm:self-auto shadow-sm">
+                            <i data-lucide="database" class="w-4 h-4"></i>
+                            <span>How We Source Data</span>
+                        </button>
+                    </div>
+
+                    <div id="opportunities-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 xs:gap-4 md:gap-6">
+                        <!-- Dynamic Opportunities -->
+                    </div>
+                </div>
+
+                <!-- VIEW 6: CAMPUS EVENTS -->
+                <div id="view-events" class="view-panel space-y-4 md:space-y-6 p-3 xs:p-4 md:p-8 max-w-7xl mx-auto hidden">
+                    <div>
+                        <h1 class="text-xl xs:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Campus Events</h1>
+                        <p class="text-slate-500 text-xs md:text-sm font-semibold mt-0.5">Workshops, competitions, and club gatherings.</p>
+                    </div>
+
+                    <div id="events-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 xs:gap-4 md:gap-6">
+                        <!-- Dynamic Events -->
+                    </div>
+                </div>
+
+                <!-- VIEW 7: CONNECTED APPS MANAGER -->
+                <div id="view-integrations" class="view-panel space-y-4 md:space-y-6 p-3 xs:p-4 md:p-8 max-w-5xl mx-auto hidden">
+                    <div>
+                        <h1 class="text-xl xs:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Connected Apps & Integrations</h1>
+                        <p class="text-slate-500 text-xs md:text-sm font-semibold mt-0.5">Demonstrates how UniFlow centralizes updates from your platforms into a single feed.</p>
+                    </div>
+
+                    <div class="p-3 xs:p-3.5 md:p-4 bg-amber-50/80 rounded-xl md:rounded-2xl border border-amber-200 flex items-start gap-2.5 md:gap-3 text-xs text-amber-900 font-semibold leading-relaxed">
+                        <i data-lucide="info" class="w-4 h-4 md:w-5 md:h-5 text-amber-600 shrink-0 mt-0.5"></i>
+                        <p><strong>Prototype Transparency Notice:</strong> External connections are simulated for competition demonstration. No actual authentication tokens or private university account credentials are being stored or synchronized.</p>
+                    </div>
+
+                    <div id="integrations-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <!-- Integration Cards rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- VIEW 8: PROBLEM & SOLUTION -->
+                <div id="view-problem-solution" class="view-panel space-y-5 xs:space-y-6 md:space-y-8 p-3 xs:p-4 md:p-8 max-w-5xl mx-auto hidden">
+                    <div class="border-b border-theme-200 pb-3 md:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h1 class="text-xl xs:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Problem & Solution Overview</h1>
+                            <p class="text-slate-500 text-xs md:text-sm font-semibold mt-0.5">Why UniFlow exists and how it transforms student information management.</p>
+                        </div>
+                        <div id="ps-back-home-wrapper" class="shrink-0">
+                            <button onclick="switchView('home')" class="touch-min-target px-4 py-2 bg-theme-50 hover:bg-theme-100 text-theme-600 border border-theme-200 font-black text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Home</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="themed-card p-4 xs:p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm space-y-2.5 md:space-y-3">
+                        <div class="flex items-center gap-2.5 md:gap-3 text-red-600 font-black">
+                            <i data-lucide="alert-circle" class="w-5 h-5 md:w-6 md:h-6 shrink-0"></i>
+                            <h2 class="text-base xs:text-lg md:text-xl text-slate-900">1. The Problem</h2>
+                        </div>
+                        <p class="text-slate-600 leading-relaxed text-xs md:text-sm font-medium break-words">
+                            University students receive critical academic, career, social, and administrative information scattered across dozens of unintegrated channels—LMS portals, university web pages, email newsletters, WhatsApp group chats, club Instagram accounts, and physical bulletin boards.
+                        </p>
+                        <p class="text-slate-600 leading-relaxed text-xs md:text-sm font-medium break-words">
+                            This structural fragmentation creates acute information overload. Important scholarship deadlines are buried in mass emails, assignment updates are missed across disparate course portals, and career-building opportunities are lost simply because students lack a centralized, intelligent priority filter.
+                        </p>
+                    </section>
+
+                    <!-- MINI RESEARCH / CAMPUS SURVEY FIELD DATA -->
+                    <section class="themed-card p-4 xs:p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm space-y-4 xs:space-y-5 md:space-y-6 bg-gradient-to-br from-white to-theme-50/30">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-theme-100 pb-3.5">
+                            <div class="flex items-center gap-2 md:gap-3 text-theme-600 font-black">
+                                <i data-lucide="bar-chart-3" class="w-5 h-5 md:w-6 md:h-6 shrink-0"></i>
+                                <h2 class="text-base xs:text-lg md:text-xl text-slate-900">2. Mini Campus Research & Student Survey Data</h2>
+                            </div>
+                            <span class="px-2.5 py-1 bg-theme-100 text-theme-700 rounded-full text-[10px] md:text-xs font-extrabold self-start sm:self-auto border border-theme-200">
+                                📊 Student Field Survey
+                            </span>
+                        </div>
+
+                        <p class="text-slate-600 text-xs md:text-sm font-medium leading-relaxed">
+                            To validate our problem hypothesis, we conducted a field survey with university students. The survey confirmed significant fragmentation and administrative stress across student workflows:
+                        </p>
+
+                        <!-- Survey Key Metrics -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                            <div class="p-3.5 md:p-4 bg-white rounded-xl md:rounded-2xl border border-theme-200 shadow-sm text-center space-y-1">
+                                <span class="text-xl md:text-2xl font-black text-theme-600">100%</span>
+                                <h4 class="text-[10px] md:text-xs font-black text-slate-800 uppercase tracking-wider">Multi-Platform Fatigue</h4>
+                                <p class="text-[10px] md:text-[11px] text-slate-500 font-semibold leading-normal">Report regularly checking 2 to 4+ separate portals (Canvas, Blackboard, Moodle, official web portals).</p>
+                            </div>
+                            <div class="p-3.5 md:p-4 bg-white rounded-xl md:rounded-2xl border border-theme-200 shadow-sm text-center space-y-1">
+                                <span class="text-xl md:text-2xl font-black text-amber-500">38%</span>
+                                <h4 class="text-[10px] md:text-xs font-black text-slate-800 uppercase tracking-wider">Missed Opportunities</h4>
+                                <p class="text-[10px] md:text-[11px] text-slate-500 font-semibold leading-normal">Have missed key scholarships, internships, or academic competitions due to scattered updates.</p>
+                            </div>
+                            <div class="p-3.5 md:p-4 bg-white rounded-xl md:rounded-2xl border border-theme-200 shadow-sm text-center space-y-1">
+                                <span class="text-xl md:text-2xl font-black text-red-500">88%</span>
+                                <h4 class="text-[10px] md:text-xs font-black text-slate-800 uppercase tracking-wider">Information Overload</h4>
+                                <p class="text-[10px] md:text-[11px] text-slate-500 font-semibold leading-normal">Feel overwhelmed tracking assignments, exam dates, and changing course deadlines manually.</p>
+                            </div>
+                        </div>
+
+                        <!-- Anonymous Student Voice / Survey Quotes -->
+                        <div class="space-y-2.5 pt-1">
+                            <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="quote" class="w-4 h-4 text-theme-600"></i>
+                                Anonymous Student Survey Responses
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-3">
+                                <div class="p-3 md:p-3.5 bg-white rounded-xl md:rounded-2xl border border-slate-200 text-xs font-medium text-slate-700 italic shadow-sm break-words leading-relaxed">
+                                    "Finding important university information and missing out on scholarships and internships is my biggest frustration..."
+                                </div>
+                                <div class="p-3 md:p-3.5 bg-white rounded-xl md:rounded-2xl border border-slate-200 text-xs font-medium text-slate-700 italic shadow-sm break-words leading-relaxed">
+                                    "Keeping track of assignments, exams and deadlines across buggy websites is very overwhelming..."
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="themed-card p-4 xs:p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm space-y-3 md:space-y-4">
+                        <div class="flex items-center gap-2.5 md:gap-3 text-theme-600 font-black">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 md:w-6 md:h-6 shrink-0"></i>
+                            <h2 class="text-base xs:text-lg md:text-xl text-slate-900">3. The Solution: UniFlow</h2>
+                        </div>
+                        <p class="text-slate-600 leading-relaxed text-xs md:text-sm font-medium break-words">
+                            UniFlow acts as a unified intelligence engine for student life. Rather than adding another task manager, UniFlow aggregates fragmented updates into a single dashboard and applies user preference models to filter out irrelevant noise.
+                        </p>
+                        <div class="p-3 md:p-4 bg-theme-50 rounded-xl md:rounded-2xl border border-theme-100 font-black text-theme-900 text-xs md:text-sm shadow-sm leading-relaxed">
+                            Core Experience Architecture: <strong>COLLECT → FILTER → PRIORITIZE → ACT</strong>
+                        </div>
+                    </section>
+
+                    <section class="themed-card p-4 xs:p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm space-y-3 md:space-y-4">
+                        <div class="flex items-center gap-2.5 md:gap-3 text-emerald-600 font-black">
+                            <i data-lucide="sparkles" class="w-5 h-5 md:w-6 md:h-6 shrink-0"></i>
+                            <h2 class="text-base xs:text-lg md:text-xl text-slate-900">4. Why It Matters</h2>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-sm">
+                            <div class="p-3.5 md:p-4 bg-theme-50/50 rounded-xl md:rounded-2xl border border-theme-100">
+                                <h4 class="font-extrabold text-slate-900 mb-1 text-xs md:text-sm">Reduces Information Overload</h4>
+                                <p class="text-slate-600 text-xs font-medium leading-relaxed">Replaces dozens of scattered notification badges with a single dashboard showing what matters in seconds.</p>
+                            </div>
+                            <div class="p-3.5 md:p-4 bg-theme-50/50 rounded-xl md:rounded-2xl border border-theme-100">
+                                <h4 class="font-extrabold text-slate-900 mb-1 text-xs md:text-sm">Prevents Missed Deadlines</h4>
+                                <p class="text-slate-600 text-xs font-medium leading-relaxed">Intelligent priority scoring surfaces urgent coursework and lab reports before they slip through the cracks.</p>
+                            </div>
+                            <div class="p-3.5 md:p-4 bg-theme-50/50 rounded-xl md:rounded-2xl border border-theme-100">
+                                <h4 class="font-extrabold text-slate-900 mb-1 text-xs md:text-sm">Democratizes Opportunities</h4>
+                                <p class="text-slate-600 text-xs font-medium leading-relaxed">Surfaces high-value scholarships and internships directly matching field of study and interests.</p>
+                            </div>
+                            <div class="p-3.5 md:p-4 bg-theme-50/50 rounded-xl md:rounded-2xl border border-theme-100">
+                                <h4 class="font-extrabold text-slate-900 mb-1 text-xs md:text-sm">Personalized Student Experience</h4>
+                                <p class="text-slate-600 text-xs font-medium leading-relaxed">Empowers students with continuous relevance feedback loops ("Relevant / Not relevant") to tailor their campus updates.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- VIEW 9: PROFILE / PREFERENCES -->
+                <div id="view-profile" class="view-panel space-y-4 md:space-y-6 p-3 xs:p-4 md:p-8 max-w-3xl mx-auto hidden">
+                    <div>
+                        <h1 class="text-xl xs:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Profile & Preferences</h1>
+                        <p class="text-slate-500 text-xs md:text-sm font-semibold mt-0.5">Update your name, visual theme accent, and interest tags to recalibrate recommendations.</p>
+                    </div>
+
+                    <div class="themed-card rounded-2xl md:rounded-3xl p-4 xs:p-5 md:p-8 shadow-sm space-y-4 xs:space-y-5 md:space-y-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Display Name</label>
+                                <input type="text" id="profile-name" placeholder="e.g. Alex Morgan" class="w-full p-3 md:p-3.5 rounded-xl md:rounded-2xl border border-theme-200 focus:ring-2 focus:ring-theme-500 text-xs md:text-sm font-semibold text-slate-800 bg-theme-50/30 transition-all">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Visual Color Theme Accent</label>
+                                <div class="flex items-center gap-3 bg-theme-50 p-2.5 rounded-xl md:rounded-2xl border border-theme-200 overflow-x-auto">
+                                    <button type="button" onclick="setTheme('indigo')" class="touch-min-target w-8 h-8 md:w-9 md:h-9 rounded-full bg-rose-500 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Sunset Coral"></button>
+                                    <button type="button" onclick="setTheme('emerald')" class="touch-min-target w-8 h-8 md:w-9 md:h-9 rounded-full bg-emerald-600 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Emerald Pulse"></button>
+                                    <button type="button" onclick="setTheme('rose')" class="touch-min-target w-8 h-8 md:w-9 md:h-9 rounded-full bg-pink-600 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Berry Pink"></button>
+                                    <button type="button" onclick="setTheme('amber')" class="touch-min-target w-8 h-8 md:w-9 md:h-9 rounded-full bg-amber-500 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Warm Amber"></button>
+                                    <button type="button" onclick="setTheme('ocean')" class="touch-min-target w-8 h-8 md:w-9 md:h-9 rounded-full bg-sky-500 border-2 border-white shadow-md active:scale-110 shrink-0 transition-transform" title="Ocean Breeze"></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 border-t border-theme-100 pt-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Field of Study</label>
+                                <select id="profile-field" onchange="toggleCustomField('profile')" class="w-full p-3 md:p-3.5 rounded-xl md:rounded-2xl border border-theme-200 focus:ring-2 focus:ring-theme-500 text-xs md:text-sm font-semibold text-slate-800 bg-theme-50/30 transition-all">
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Business & Finance">Business & Finance</option>
+                                    <option value="Arts & Design">Arts & Design</option>
+                                    <option value="Biology & Health">Biology & Health</option>
+                                    <option value="Other">Other (Specify Major)</option>
+                                </select>
+                                <input type="text" id="profile-field-other" placeholder="Write your major here..." class="w-full mt-2 p-3 rounded-xl border border-theme-200 text-xs font-semibold bg-white hidden">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Year of Study</label>
+                                <select id="profile-year" class="w-full p-3 md:p-3.5 rounded-xl md:rounded-2xl border border-theme-200 focus:ring-2 focus:ring-theme-500 text-xs md:text-sm font-semibold text-slate-800 bg-theme-50/30 transition-all">
+                                    <option value="Year 1">Year 1</option>
+                                    <option value="Year 2">Year 2</option>
+                                    <option value="Year 3">Year 3</option>
+                                    <option value="Year 4">Year 4</option>
+                                    <option value="Postgraduate">Postgraduate</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-2 md:mb-3">Your Interest Preferences</h3>
+                            <div id="profile-interests-container" class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2">
+                                <!-- Dynamic Interest Checkboxes -->
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-theme-100 flex items-center justify-between gap-2">
+                            <span id="profile-save-status" class="text-xs text-emerald-600 font-extrabold hidden truncate">✓ Settings saved!</span>
+                            <button onclick="saveProfilePreferences()" class="touch-min-target px-5 py-2.5 md:px-7 md:py-3 bg-theme-600 hover:bg-theme-500 text-white font-extrabold rounded-xl md:rounded-2xl text-xs transition-all shadow-lg shadow-theme-500/25 ml-auto shrink-0">
+                                Save Preferences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- GENERAL DETAIL MODAL -->
+    <div id="detail-modal" role="dialog" aria-modal="true" aria-label="Announcement details" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-3 xs:p-4">
+        <div class="bg-white rounded-2xl md:rounded-3xl max-w-lg w-full p-4 xs:p-6 md:p-8 shadow-2xl space-y-3.5 md:space-y-4 border border-theme-100 relative max-h-[88vh] overflow-y-auto custom-scrollbar">
+            <button onclick="closeDetailModal()" aria-label="Close dialog" class="touch-min-target absolute top-3 right-3 md:top-5 md:right-5 p-1.5 text-slate-400 hover:text-slate-600 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div id="modal-content">
+                <!-- Dynamically injected modal content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        const ALL_INTERESTS = [
+            { id: 'academics', label: '📚 Academic deadlines' },
+            { id: 'announcements', label: '🎓 University announcements' },
+            { id: 'scholarships', label: '💰 Scholarships & financial aid' },
+            { id: 'internships', label: '💼 Internships & jobs' },
+            { id: 'competitions', label: '🏆 Competitions' },
+            { id: 'research', label: '🔬 Research opportunities' },
+            { id: 'clubs', label: '🎉 Club events' },
+            { id: 'workshops', label: '🧑‍🏫 Workshops' },
+            { id: 'volunteering', label: '🤝 Volunteering' },
+            { id: 'wellbeing', label: '🌱 Wellbeing' },
+            { id: 'creative', label: '🎨 Creative events' }
+        ];
+
+        let isSignedIn = false;
+        let calendarYear = 2026;
+        let calendarMonth = 8; // 0-indexed: 8 represents September
+
+        // REALISTIC CALENDAR DEMO EVENTS SPECIFIC TO MONTH & YEAR
+        const demoCalendarEvents = [
+            // September 2026
+            { year: 2026, month: 8, day: 10, title: 'MATH101 Calculus Quiz', type: 'Exam' },
+            { year: 2026, month: 8, day: 11, title: 'CHEM101 Lab Report', type: 'Deadline' },
+            { year: 2026, month: 8, day: 14, title: 'DesignAthon 2026 Kickoff', type: 'Competition' },
+            { year: 2026, month: 8, day: 20, title: 'Annual Career Fair', type: 'Workshop' },
+            { year: 2026, month: 8, day: 30, title: 'Front-End Internship Due', type: 'Scholarship' },
+
+            // October 2026
+            { year: 2026, month: 9, day: 5, title: 'STEM Scholarship Due', type: 'Scholarship' },
+            { year: 2026, month: 9, day: 15, title: 'Midterm Exam Week', type: 'Exam' },
+            { year: 2026, month: 9, day: 22, title: 'AI & Robotics Talk', type: 'Workshop' },
+            { year: 2026, month: 9, day: 31, title: 'Campus Hackathon', type: 'Competition' },
+
+            // November 2026
+            { year: 2026, month: 10, day: 1, title: 'Data Grant Due', type: 'Scholarship' },
+            { year: 2026, month: 10, day: 12, title: 'CS Club Showcase', type: 'Workshop' },
+            { year: 2026, month: 10, day: 25, title: 'Project Draft Due', type: 'Deadline' },
+
+            // December 2026
+            { year: 2026, month: 11, day: 8, title: 'Final Exams Start', type: 'Exam' },
+            { year: 2026, month: 11, day: 18, title: 'End of Fall Term', type: 'Workshop' }
+        ];
+
+        let userProfile = {
+            name: 'Alex Morgan',
+            theme: 'indigo',
+            field: 'Computer Science',
+            year: 'Year 1',
+            interests: ['scholarships', 'internships', 'competitions', 'academics']
+        };
+
+        // CONNECTED APPS DATA
+        let integrations = [
+            { id: 'lms', name: 'University LMS Sync', desc: 'Centralizes assignments from Blackboard, Canvas, or Moodle', icon: 'L', connected: true, activePlatform: 'Blackboard' },
+            { id: 'gcal', name: 'Google Calendar', desc: 'Centralizes class schedules & exam blocks', icon: 'G', connected: true },
+            { id: 'outlook', name: 'Microsoft Outlook', desc: 'Centralizes university email notifications', icon: 'M', connected: false },
+            { id: 'notion', name: 'Notion Workspace', desc: 'Imports course notebook databases', icon: 'N', connected: false },
+            { id: 'whatsapp', name: 'WhatsApp Group Sync', desc: 'Parses class group announcement messages', icon: 'W', connected: false },
+            { id: 'discord', name: 'Discord Community', desc: 'Centralizes tech club & project announcements', icon: 'D', connected: true },
+            { id: 'custom', name: 'Custom Portal / RSS', desc: 'Connects any custom club link or feed', icon: '+', connected: false }
+        ];
+
+        let tasks = [
+            { id: 1, title: 'Calculus I Problem Set', course: 'MATH101', due: 'Tomorrow', duration: '1.5 hours', priority: 'high', completed: false },
+            { id: 2, title: 'Intro Chemistry Lab Report', course: 'CHEM101', due: 'Due in 2 days', duration: '2 hours', priority: 'medium', completed: false },
+            { id: 3, title: 'Programming Fundamentals Prep', course: 'CS101', due: 'Due in 5 days', duration: '3 hours', priority: 'low', completed: false }
+        ];
+
+        // DEMO ANNOUNCEMENTS — FULL COVERAGE FOR EVERY PREFERENCE CATEGORY
+        let announcements = [
+            {
+                id: 101,
+                title: 'Scholarship Applications Open for STEM Students',
+                category: 'Scholarships',
+                date: 'Sep 5, 2026',
+                deadline: '12 days left',
+                description: 'Annual faculty scholarships offering tuition support for academic excellence in technical disciplines.',
+                tags: ['scholarships'],
+                priorityScore: 95,
+                dismissed: false
+            },
+            {
+                id: 102,
+                title: 'Computer Science & Tech Internship Fair',
+                category: 'Careers',
+                date: 'Sep 6, 2026',
+                deadline: '3 days left',
+                description: 'Meet recruiters from top technical enterprises and startups looking for undergraduate interns.',
+                tags: ['internships'],
+                priorityScore: 90,
+                dismissed: false
+            },
+            {
+                id: 103,
+                title: 'DesignAthon 2026 Registration Live',
+                category: 'Opportunities',
+                date: 'Sep 4, 2026',
+                deadline: 'September 14',
+                description: '48-hour UI/UX and web design hackathon with cash prizes and mentorship opportunities.',
+                tags: ['competitions'],
+                priorityScore: 85,
+                dismissed: false
+            },
+            {
+                id: 104,
+                title: 'Midterm Assessment & Exam Guidelines Released',
+                category: 'Academics',
+                date: 'Sep 7, 2026',
+                deadline: 'September 20',
+                description: 'Official academic committee notice detailing room assignments and schedule protocols for fall midterm assessments.',
+                tags: ['academics'],
+                priorityScore: 88,
+                dismissed: false
+            },
+            {
+                id: 105,
+                title: 'Annual Campus Town Hall & Strategic Updates',
+                category: 'University Announcements',
+                date: 'Sep 8, 2026',
+                deadline: 'September 18',
+                description: 'Join university leadership for key announcements regarding campus upgrades and academic policies.',
+                tags: ['announcements'],
+                priorityScore: 70,
+                dismissed: false
+            },
+            {
+                id: 106,
+                title: 'Undergraduate AI & Robotics Research Assistantships',
+                category: 'Research Opportunities',
+                date: 'Sep 3, 2026',
+                deadline: 'October 1',
+                description: 'Apply for funded student research assistant positions working alongside faculty in advanced computing labs.',
+                tags: ['research'],
+                priorityScore: 82,
+                dismissed: false
+            },
+            {
+                id: 107,
+                title: 'Student Club Showcase & Involvement Fair',
+                category: 'Club Events',
+                date: 'Sep 9, 2026',
+                deadline: 'Tomorrow',
+                description: 'Explore over 50 campus student organizations, network with student leaders, and sign up for autumn activities.',
+                tags: ['clubs'],
+                priorityScore: 65,
+                dismissed: false
+            },
+            {
+                id: 108,
+                title: 'Effective Technical Resume Writing Workshop',
+                category: 'Workshops',
+                date: 'Sep 8, 2026',
+                deadline: 'September 15',
+                description: 'Interactive session hosted by career advisors focusing on crafting impactful engineering resumes and portfolio reviews.',
+                tags: ['workshops'],
+                priorityScore: 75,
+                dismissed: false
+            },
+            {
+                id: 109,
+                title: 'Campus Community Outreach & Peer Tutoring Drive',
+                category: 'Volunteering',
+                date: 'Sep 2, 2026',
+                deadline: 'September 25',
+                description: 'Volunteer as a student tutor or help coordinate local community outreach programs during the fall semester.',
+                tags: ['volunteering'],
+                priorityScore: 60,
+                dismissed: false
+            },
+            {
+                id: 110,
+                title: 'Campus Health & Mental Wellbeing Session',
+                category: 'Wellbeing',
+                date: 'Sep 2, 2026',
+                deadline: 'September 10',
+                description: 'Join mindfulness coaches for practical stress management techniques and wellness strategies ahead of midterms.',
+                tags: ['wellbeing'],
+                priorityScore: 80,
+                dismissed: false
+            },
+            {
+                id: 111,
+                title: 'Campus Digital Media & Creative Arts Exhibition',
+                category: 'Creative Events',
+                date: 'Sep 1, 2026',
+                deadline: 'October 5',
+                description: 'Submit your digital artwork, photography, or UI showcase to be featured in the annual campus student art exhibition.',
+                tags: ['creative'],
+                priorityScore: 55,
+                dismissed: false
+            }
+        ];
+
+        let notificationsList = [
+            { id: 1, title: 'Deadline approaching', text: 'Your Chemistry Lab Report is due in 2 days.', icon: 'clock', time: '10m ago' },
+            { id: 2, title: 'New recommendation', text: 'A scholarship matching your interests was posted.', icon: 'sparkles', time: '1h ago' },
+            { id: 3, title: 'Upcoming event', text: 'The Design Club workshop starts in 2 hours.', icon: 'calendar', time: '3h ago' }
+        ];
+
+        let opportunitiesList = [
+            { 
+                id: 201, 
+                title: 'Global STEM Undergraduate Scholarship', 
+                category: 'Scholarship', 
+                amount: 'Full Tuition Cover', 
+                deadline: 'Oct 15, 2026', 
+                match: '96% Match', 
+                matchReason: 'Matches Academic Excellence & STEM Major',
+                docs: ['Transcript', 'Motivation Letter', 'Faculty Reference'] 
+            },
+            { 
+                id: 202, 
+                title: 'Front-End Development Summer Intern', 
+                category: 'Internship', 
+                amount: 'Paid Internship', 
+                deadline: 'Sep 30, 2026', 
+                match: '91% Match', 
+                matchReason: 'Matches Computer Science profile',
+                docs: ['Resume/CV', 'GitHub / Portfolio Link'] 
+            },
+            { 
+                id: 203, 
+                title: 'AI & Data Science Student Research Grant', 
+                category: 'Research', 
+                amount: 'Research Stipend', 
+                deadline: 'Nov 01, 2026', 
+                match: '85% Match', 
+                matchReason: 'Matches interest in Research & Tech',
+                docs: ['Research Proposal', 'Faculty Advisor Approval'] 
+            }
+        ];
+
+        let campusEventsList = [
+            { id: 301, title: '🎨 Design Workshop', date: 'Tomorrow · 2:00 PM', location: 'Innovation Hub', category: 'Workshops' },
+            { id: 302, title: '🏆 Mathematics Competition', date: 'October 31 · 10:00 AM', location: 'University Main Hall', category: 'Academic' },
+            { id: 303, title: '🎤 Annual Career Fair', date: 'September 20 · 9:00 AM', location: 'Student Union Center', category: 'Career' }
+        ];
+
+        // DYNAMIC HELPER TO COMPUTE MATCH REASONING BASED EXCLUSIVELY ON CURRENTLY SELECTED PREFERENCES
+        function getDynamicMatchReason(announcement) {
+            const matchedTags = announcement.tags.filter(tag => userProfile.interests.includes(tag));
+            if (matchedTags.length === 0) return null;
+            
+            const interestObj = ALL_INTERESTS.find(i => i.id === matchedTags[0]);
+            const cleanLabel = interestObj ? interestObj.label.replace(/^[^\s]+\s*/, '') : matchedTags[0];
+            return `Matches your interest in ${cleanLabel}.`;
+        }
+
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', () => {
+            setTheme(userProfile.theme);
+            initOnboardingInterests();
+            renderOnboardingStep2Apps();
+            renderAll();
+            lucide.createIcons();
+        });
+
+        function toggleCustomField(context) {
+            const select = document.getElementById(`${context}-field`);
+            const otherInput = document.getElementById(`${context}-field-other`);
+            if (select && otherInput) {
+                if (select.value === 'Other') {
+                    otherInput.classList.remove('hidden');
+                    otherInput.focus();
+                } else {
+                    otherInput.classList.add('hidden');
+                }
+            }
+        }
+
+        function setTheme(themeName) {
+            userProfile.theme = themeName;
+            document.documentElement.setAttribute('data-theme', themeName);
+        }
+
+        function getInitials(name) {
+            if (!name) return 'AM';
+            const parts = name.trim().split(' ');
+            if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        function updateUserDataUI() {
+            const userName = userProfile.name.trim() || 'Alex Morgan';
+            const firstName = userName.split(' ')[0];
+            
+            // DYNAMIC TIME-BASED GREETING CALCULATOR
+            const hour = new Date().getHours();
+            let timeGreeting = 'Good day';
+            if (hour >= 5 && hour < 12) {
+                timeGreeting = 'Good morning';
+            } else if (hour >= 12 && hour < 17) {
+                timeGreeting = 'Good afternoon';
+            } else {
+                timeGreeting = 'Good evening';
+            }
+
+            document.getElementById('dashboard-greeting').innerText = `${timeGreeting}, ${firstName} 👋`;
+            document.getElementById('sidebar-user-name').innerText = userName;
+            document.getElementById('mobile-user-name').innerText = userName;
+            document.getElementById('user-avatar').innerText = getInitials(userName);
+            document.getElementById('user-profile-sub').innerText = `${userProfile.field} · ${userProfile.year}`;
+        }
+
+        function renderAll() {
+            updateUserDataUI();
+            renderTasks();
+            renderImportantFeed();
+            renderAnnouncements('All');
+            renderMiniCalendar();
+            renderAcademicPage();
+            renderCalendarGrid();
+            renderOpportunities();
+            renderEvents();
+            renderNotifications();
+            renderIntegrations();
+            renderProfilePage();
+        }
+
+        function handleHomePrimaryClick() {
+            if (isSignedIn) {
+                switchView('dashboard');
+            } else {
+                launchOnboardingFlow();
+            }
+        }
+
+        function launchOnboardingFlow() {
+            document.getElementById('onboarding-step-1').classList.remove('hidden');
+            document.getElementById('onboarding-step-2').classList.add('hidden');
+            document.getElementById('onboarding-modal').classList.remove('hidden');
+        }
+
+        function closeOnboardingModal() {
+            document.getElementById('onboarding-modal').classList.add('hidden');
+        }
+
+        // 2-STEP ONBOARDING & SIGN IN
+        function initOnboardingInterests() {
+            const grid = document.getElementById('interests-grid');
+            grid.innerHTML = ALL_INTERESTS.map(item => {
+                const checked = userProfile.interests.includes(item.id) ? 'checked' : '';
+                return `
+                    <label class="flex items-center gap-2 p-2.5 bg-theme-50/50 border border-theme-200 rounded-xl cursor-pointer hover:bg-theme-50 transition-colors text-xs font-semibold text-slate-700">
+                        <input type="checkbox" name="interest" value="${item.id}" ${checked} class="rounded text-theme-600 focus:ring-theme-500 w-4 h-4 shrink-0">
+                        <span class="truncate">${item.label}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function goToOnboardingStep2(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('onboarding-name').value;
+            const selectField = document.getElementById('onboarding-field').value;
+            const otherField = document.getElementById('onboarding-field-other').value.trim();
+            const year = document.getElementById('onboarding-year').value;
+            const checkedBoxes = document.querySelectorAll('input[name="interest"]:checked');
+            
+            userProfile.name = nameInput || 'Alex Morgan';
+            userProfile.field = (selectField === 'Other' && otherField) ? otherField : selectField;
+            userProfile.year = year;
+            userProfile.interests = Array.from(checkedBoxes).map(cb => cb.value);
+
+            document.getElementById('onboarding-step-1').classList.add('hidden');
+            document.getElementById('onboarding-step-2').classList.remove('hidden');
+        }
+
+        function backToOnboardingStep1() {
+            document.getElementById('onboarding-step-2').classList.add('hidden');
+            document.getElementById('onboarding-step-1').classList.remove('hidden');
+        }
+
+        function renderOnboardingStep2Apps() {
+            const grid = document.getElementById('onboarding-apps-grid');
+            grid.innerHTML = integrations.map(app => `
+                <div class="p-3 bg-theme-50/50 rounded-xl border border-theme-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-theme-100 text-theme-700 flex items-center justify-center font-bold text-xs shrink-0">${app.icon}</div>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-slate-800 text-xs truncate">${app.name}</h4>
+                            <p class="text-[10px] ${app.connected ? 'text-emerald-600 font-bold' : 'text-slate-400'}">${app.connected ? 'Connected' : 'Not Connected'}</p>
+                        </div>
+                    </div>
+                    <input type="checkbox" ${app.connected ? 'checked' : ''} onchange="toggleAppConnection('${app.id}')" class="w-4 h-4 text-theme-600 rounded cursor-pointer shrink-0 ml-2">
+                </div>
+            `).join('');
+        }
+
+        function finishOnboarding() {
+            isSignedIn = true;
+
+            // UNLOCK AUTHENTICATED APP SHELL UI
+            document.getElementById('public-header').classList.add('hidden');
+            
+            // Show desktop sidebar strictly on large viewports (1024px+)
+            const sidebar = document.getElementById('app-sidebar');
+            sidebar.classList.remove('hidden');
+            sidebar.classList.add('hidden', 'lg:flex');
+
+            document.getElementById('app-header').classList.remove('hidden');
+            document.getElementById('app-header').classList.add('flex');
+
+            // Update Home Page CTA Button
+            const btnText = document.getElementById('home-btn-text');
+            if (btnText) btnText.innerText = 'Go to My Dashboard';
+
+            // Show Welcome Banner on Home Page
+            const welcomeBanner = document.getElementById('home-welcome-banner');
+            const welcomeTitle = document.getElementById('welcome-banner-title');
+            const welcomeSub = document.getElementById('welcome-banner-sub');
+            if (welcomeBanner && welcomeTitle && welcomeSub) {
+                welcomeTitle.innerText = `Welcome back, ${userProfile.name.split(' ')[0]}! 👋`;
+                welcomeSub.innerText = `Your personalized feed for ${userProfile.field} · ${userProfile.year} is active.`;
+                welcomeBanner.classList.remove('hidden');
+            }
+
+            document.getElementById('onboarding-modal').classList.add('hidden');
+            renderAll();
+            switchView('dashboard');
+        }
+
+        // SIDEBAR COLLAPSE (DESKTOP ONLY)
+        let sidebarCollapsed = false;
+        function toggleSidebar() {
+            sidebarCollapsed = !sidebarCollapsed;
+            const sidebar = document.getElementById('app-sidebar');
+            const expandBtn = document.getElementById('sidebar-expand-btn');
+            if (sidebarCollapsed) {
+                sidebar.classList.add('sidebar-collapsed');
+                if (expandBtn) {
+                    expandBtn.classList.remove('hidden');
+                    expandBtn.classList.add('lg:flex');
+                }
+            } else {
+                sidebar.classList.remove('sidebar-collapsed');
+                if (expandBtn) {
+                    expandBtn.classList.add('hidden');
+                    expandBtn.classList.remove('lg:flex');
+                }
+            }
+        }
+
+        // NAVIGATION HANDLER
+        function switchView(viewId) {
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.add('hidden'));
+            const target = document.getElementById(`view-${viewId}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('bg-theme-50', 'text-theme-600', 'font-black', 'shadow-sm', 'border', 'border-theme-100');
+                btn.classList.add('text-slate-600');
+                btn.removeAttribute('aria-current');
+            });
+            const activeNav = document.getElementById(`nav-${viewId}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-theme-50', 'text-theme-600', 'font-black', 'shadow-sm', 'border', 'border-theme-100');
+                activeNav.classList.remove('text-slate-600');
+                activeNav.setAttribute('aria-current', 'page');
+            }
+
+            // Dynamically show/hide the "Back to Home" button on Problem & Solution view when signed out
+            const psBackBtn = document.getElementById('ps-back-home-wrapper');
+            if (psBackBtn) {
+                if (viewId === 'problem-solution' && !isSignedIn) {
+                    psBackBtn.classList.remove('hidden');
+                } else {
+                    psBackBtn.classList.add('hidden');
+                }
+            }
+
+            const titleMap = {
+                'home': 'Home Page',
+                'dashboard': 'Dashboard',
+                'announcements': 'Announcements Feed',
+                'academics': 'Academics & Workload',
+                'calendar': 'Schedule Calendar',
+                'opportunities': 'Opportunities',
+                'events': 'Campus Events',
+                'integrations': 'Connected Apps',
+                'problem-solution': 'Problem & Solution',
+                'profile': 'Profile & Preferences'
+            };
+            document.getElementById('page-title').innerText = titleMap[viewId] || 'UniFlow';
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // DASHBOARD PRIORITY TASKS WITH CANCEL/REMOVE ACTION
+        function renderTasks() {
+            const container = document.getElementById('priority-tasks-list');
+            const pending = tasks.filter(t => !t.completed);
+            document.getElementById('priority-count').innerText = `${pending.length} Pending`;
+
+            if (tasks.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-4">All tasks completed!</p>`;
+                return;
+            }
+
+            container.innerHTML = tasks.map(t => `
+                <div class="flex items-center justify-between p-3.5 md:p-4 themed-card rounded-2xl shadow-sm ${t.completed ? 'opacity-40 line-through' : ''}">
+                    <div class="flex items-center gap-2.5 xs:gap-3.5 min-w-0">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id})" class="w-4 h-4 md:w-5 md:h-5 rounded-lg text-theme-600 focus:ring-theme-500 cursor-pointer shrink-0">
+                        <div class="min-w-0">
+                            <span class="text-[9px] font-black uppercase tracking-wider ${t.priority === 'high' ? 'text-red-500' : 'text-amber-500'} block">${t.priority === 'high' ? '🔴 Priority High' : '🟡 Priority Medium'}</span>
+                            <h4 class="font-extrabold text-slate-900 text-xs md:text-sm mt-0.5 truncate">${t.title}</h4>
+                            <p class="text-[10px] xs:text-[11px] md:text-xs font-semibold text-slate-500 mt-0.5">${t.due} · Estimated ${t.duration}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeTaskFromTracker(${t.id})" class="touch-min-target p-1.5 md:p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-1 text-xs font-extrabold shrink-0 ml-1.5" title="Remove from Tracker">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Remove</span>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            renderTasks();
+            renderAcademicPage();
+        }
+
+        function removeTaskFromTracker(id) {
+            const removedTask = tasks.find(t => t.id === id);
+            tasks = tasks.filter(t => t.id !== id);
+
+            if (removedTask) {
+                notificationsList.unshift({
+                    id: Date.now(),
+                    title: 'Item Removed from Tracker',
+                    text: `"${removedTask.title}" has been removed from your Priority Responsibilities.`,
+                    icon: 'trash-2',
+                    time: 'Just now'
+                });
+            }
+
+            renderTasks();
+            renderAcademicPage();
+            renderNotifications();
+        }
+
+        // DASHBOARD RECOMMENDATIONS (COLLECT -> FILTER -> PRIORITIZE -> CURATE 3-5 TOP ITEMS)
+        function renderImportantFeed() {
+            const container = document.getElementById('important-feed');
+            
+            // Step 1: Filter strictly by active preferences
+            const matched = announcements.filter(a => !a.dismissed && a.tags.some(tag => userProfile.interests.includes(tag)));
+
+            if (matched.length === 0) {
+                container.innerHTML = `<div class="col-span-1 sm:col-span-2 p-5 themed-card rounded-2xl border-dashed text-center text-xs text-slate-500 font-semibold">No active updates match your current preference tags. Update preferences to surface items.</div>`;
+                return;
+            }
+
+            // Step 2: Deterministic Priority Sorting
+            const prioritized = [...matched].sort((a, b) => (b.priorityScore || 50) - (a.priorityScore || 50));
+
+            // Step 3: Curate / Cap for Dashboard (Top 4 Max items)
+            const curatedDashboardList = prioritized.slice(0, 4);
+
+            container.innerHTML = curatedDashboardList.map(a => {
+                const matchReason = getDynamicMatchReason(a);
+                return `
+                <div class="themed-card p-4 md:p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-theme-600"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-2 gap-1">
+                            <span class="text-[8px] xs:text-[9px] font-black uppercase tracking-wider text-theme-600 bg-theme-50 border border-theme-100 px-1.5 py-0.5 rounded-md truncate">🚩 Recommended</span>
+                            <span class="text-[10px] md:text-[11px] text-slate-400 font-semibold shrink-0">${a.deadline}</span>
+                        </div>
+                        <h3 class="font-extrabold text-slate-900 text-xs md:text-sm leading-snug group-hover:text-theme-600 transition-colors break-words">${a.title}</h3>
+                        <p class="text-xs text-slate-500 font-medium mt-1 leading-relaxed">${a.description}</p>
+                        
+                        <!-- EXPLICIT TRANSPARENT PERSONALIZATION EXPLANATION -->
+                        <div class="mt-2.5 p-2 bg-theme-50/80 rounded-xl border border-theme-100 flex items-center gap-1.5 text-[10px] md:text-[11px] font-bold text-theme-900">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-theme-600 shrink-0"></i>
+                            <span class="break-words">Why you're seeing this: ${matchReason}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-theme-100">
+                        <button onclick="openModal('${a.title}', '${a.description}', '${a.category}')" class="text-xs font-extrabold text-theme-600 hover:underline">View Details</button>
+                        <div class="flex items-center gap-1">
+                            <button onclick="markFeedback(${a.id}, true)" class="touch-min-target p-1 text-slate-400 hover:text-emerald-600 transition-colors" title="Relevant" aria-label="Mark as relevant"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
+                            <button onclick="markFeedback(${a.id}, false)" class="touch-min-target p-1 text-slate-400 hover:text-red-600 transition-colors" title="Not relevant" aria-label="Mark as not relevant"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+        }
+
+        // ANNOUNCEMENTS FEED
+        function renderAnnouncements(category = 'All') {
+            const container = document.getElementById('announcements-grid');
+
+            // SINGLE SOURCE OF TRUTH: only announcements whose tags match a currently
+            // selected preference are ever shown. Non-matching announcements are
+            // excluded entirely, not just visually de-emphasized.
+            let list = announcements.filter(a => !a.dismissed && a.tags.some(tag => userProfile.interests.includes(tag)));
+
+            if (category !== 'All') {
+                if (category === 'Events') {
+                    // "Events" spans multiple underlying categories (Club Events, Creative Events)
+                    list = list.filter(a => a.category === 'Club Events' || a.category === 'Creative Events');
+                } else {
+                    list = list.filter(a => a.category.toLowerCase() === category.toLowerCase());
+                }
+            }
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="col-span-1 sm:col-span-2 p-5 themed-card rounded-2xl border-dashed text-center text-xs text-slate-500 font-semibold">No announcements match your current preferences. Update Preferences to see more.</div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = list.map(a => {
+                const isRecommended = a.tags.some(tag => userProfile.interests.includes(tag));
+                return `
+                    <div class="themed-card p-4 xs:p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-sm flex flex-col justify-between space-y-3.5 md:space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between gap-1.5 mb-2.5">
+                                <span class="text-[9px] md:text-[10px] font-black uppercase tracking-wider text-slate-600 bg-theme-50 px-2.5 py-1 rounded-xl border border-theme-100 truncate">${a.category}</span>
+                                ${isRecommended ? '<span class="text-[9px] md:text-[10px] bg-theme-100 text-theme-700 font-black px-2.5 py-1 rounded-xl border border-theme-200 shrink-0">Matches Interests</span>' : ''}
+                            </div>
+                            <h3 class="font-extrabold text-slate-900 text-xs xs:text-sm md:text-base leading-snug break-words">${a.title}</h3>
+                            <p class="text-xs text-slate-500 font-medium mt-1.5 line-clamp-2 leading-relaxed">${a.description}</p>
+                        </div>
+                        <div class="pt-2.5 border-t border-theme-100 flex items-center justify-between text-xs">
+                            <span class="text-slate-400 font-semibold text-[10px] xs:text-[11px]">${a.date}</span>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="markFeedback(${a.id}, false)" class="px-2.5 py-1 bg-slate-100 hover:bg-red-50 hover:text-red-600 rounded-xl text-slate-600 font-bold transition-colors text-[11px]">👎 Hide</button>
+                                <button onclick="openModal('${a.title}', '${a.description}', '${a.category}')" class="px-3 py-1 bg-theme-50 text-theme-600 hover:bg-theme-100 font-extrabold rounded-xl transition-colors text-[11px]">Read</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function filterAnnouncements(cat) {
+            document.querySelectorAll('.ann-filter-btn').forEach(b => {
+                b.classList.remove('bg-theme-600', 'text-white', 'shadow-md', 'shadow-theme-500/20');
+                b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+            });
+            event.target.classList.add('bg-theme-600', 'text-white', 'shadow-md', 'shadow-theme-500/20');
+            event.target.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+            renderAnnouncements(cat);
+        }
+
+        function markFeedback(id, isRelevant) {
+            if (!isRelevant) {
+                announcements = announcements.map(a => a.id === id ? { ...a, dismissed: true } : a);
+                renderImportantFeed();
+                renderAnnouncements('All');
+            }
+        }
+
+        // ACADEMICS PAGE
+        function renderAcademicPage() {
+            const container = document.getElementById('academic-deadlines-list');
+            container.innerHTML = tasks.map(t => `
+                <div class="flex items-center justify-between p-3.5 md:p-4 bg-theme-50/50 rounded-2xl border border-theme-100 shadow-sm">
+                    <div class="flex items-center gap-2.5 md:gap-3 min-w-0">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id})" class="w-4 h-4 md:w-5 md:h-5 rounded-lg text-theme-600 cursor-pointer shrink-0">
+                        <div class="min-w-0">
+                            <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">${t.course}</p>
+                            <h4 class="font-extrabold text-slate-900 text-xs md:text-sm truncate ${t.completed ? 'line-through text-slate-400' : ''}">${t.title}</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 md:gap-3 shrink-0 ml-2">
+                        <span class="text-[10px] xs:text-[11px] md:text-xs font-bold text-slate-700 bg-white px-2 py-1 md:px-3.5 md:py-1.5 rounded-xl border border-theme-200 shadow-sm">${t.due}</span>
+                        <button onclick="removeTaskFromTracker(${t.id})" class="touch-min-target p-1.5 md:p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors text-xs font-extrabold" title="Remove from Tracker">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // CALENDAR WIDGET & GRID WITH DYNAMIC DATES AND UNIQUE MONTHLY EVENTS
+        function renderMiniCalendar() {
+            const container = document.getElementById('dashboard-mini-calendar');
+            const items = [
+                { day: 'THU', date: '10', title: 'Calculus I Quiz', type: 'Exam' },
+                { day: 'FRI', date: '11', title: 'Programming Assignment', type: 'Deadline' },
+                { day: 'MON', date: '14', title: 'DesignAthon Starts', type: 'Event' }
+            ];
+            container.innerHTML = items.map(i => `
+                <div class="flex items-center gap-2.5 md:gap-3 p-2 rounded-xl hover:bg-theme-50 transition-all">
+                    <div class="w-8 h-8 md:w-10 md:h-10 bg-theme-50 text-theme-600 rounded-xl md:rounded-2xl flex flex-col items-center justify-center font-bold text-xs shrink-0 border border-theme-100 shadow-sm">
+                        <span class="text-[7px] md:text-[9px] text-theme-500 uppercase leading-none font-black">${i.day}</span>
+                        <span class="font-black text-xs">${i.date}</span>
+                    </div>
+                    <div class="min-w-0">
+                        <h4 class="text-xs font-extrabold text-slate-900 truncate">${i.title}</h4>
+                        <span class="text-[10px] font-semibold text-slate-400 block mt-0.5">${i.type}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function navigateCalendar(direction) {
+            if (direction === 0) {
+                calendarYear = 2026;
+                calendarMonth = 8; // Reset to September 2026
+            } else {
+                calendarMonth += direction;
+                if (calendarMonth > 11) {
+                    calendarMonth = 0;
+                    calendarYear++;
+                } else if (calendarMonth < 0) {
+                    calendarMonth = 11;
+                    calendarYear--;
+                }
+            }
+            renderCalendarGrid();
+        }
+
+        function renderCalendarGrid() {
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const heading = document.getElementById('calendar-month-heading');
+            heading.innerText = `${monthNames[calendarMonth]} ${calendarYear}`;
+
+            const grid = document.getElementById('calendar-days-grid');
+            
+            // Calculate starting day of week and days in month dynamically
+            const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
+            const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(calendarYear, calendarMonth, 0).getDate();
+
+            let html = '';
+
+            // Render padding days from previous month
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const prevDayNum = daysInPrevMonth - i;
+                html += `
+                    <div class="min-h-[60px] xs:min-h-[70px] md:min-h-[85px] p-1 xs:p-1.5 md:p-2.5 bg-slate-50/50 border border-slate-100 rounded-lg xs:rounded-xl opacity-40">
+                        <span class="text-[10px] xs:text-xs font-bold text-slate-400">${prevDayNum}</span>
+                    </div>
+                `;
+            }
+
+            // Render current month days with specific events
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEvents = demoCalendarEvents.filter(e => e.year === calendarYear && e.month === calendarMonth && e.day === day);
+                const isToday = (calendarYear === 2026 && calendarMonth === 8 && day === 11);
+
+                html += `
+                    <div class="min-h-[60px] xs:min-h-[70px] md:min-h-[85px] p-1 xs:p-1.5 md:p-2.5 ${isToday ? 'bg-theme-50/80 border-2 border-theme-500' : 'bg-theme-50/20 border border-theme-100'} rounded-lg xs:rounded-xl flex flex-col justify-between hover:bg-white hover:shadow-md transition-all overflow-hidden">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] xs:text-xs font-black ${isToday ? 'text-theme-600' : 'text-slate-600'}">${day}</span>
+                            ${isToday ? '<span class="text-[7px] xs:text-[8px] font-black uppercase text-theme-600 bg-white px-1 rounded-md shadow-xs hidden xs:inline">Today</span>' : ''}
+                        </div>
+                        <div class="space-y-0.5 xs:space-y-1">
+                            ${dayEvents.map(ev => `
+                                <div onclick="openModal('${ev.title}', 'Scheduled on ${monthNames[calendarMonth]} ${day}, ${calendarYear}.', '${ev.type}')" class="bg-theme-100 border border-theme-200 text-theme-800 text-[8px] xs:text-[9px] font-extrabold p-0.5 xs:p-1 rounded-md xs:rounded-lg truncate cursor-pointer shadow-xs hover:scale-102 transition-transform" title="${ev.title}">
+                                    ${ev.title}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // OPPORTUNITIES HUB & TRACKER
+        function renderOpportunities() {
+            const container = document.getElementById('opportunities-grid');
+            container.innerHTML = opportunitiesList.map(o => `
+                <div class="themed-card p-4 xs:p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-sm flex flex-col justify-between space-y-3.5 md:space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between gap-1.5 mb-2.5">
+                            <span class="text-[8px] xs:text-[9px] md:text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shadow-sm truncate">${o.match}</span>
+                            <span class="text-[10px] xs:text-xs font-bold text-slate-400 shrink-0">Due ${o.deadline}</span>
+                        </div>
+                        <h3 class="font-extrabold text-slate-900 text-xs xs:text-sm md:text-base leading-snug break-words">${o.title}</h3>
+                        <p class="text-xs font-extrabold text-theme-600 mt-1">💰 ${o.amount}</p>
+                        <p class="text-xs text-slate-500 font-medium mt-1.5 italic">"${o.matchReason}"</p>
+                    </div>
+
+                    <div class="p-2.5 xs:p-3 bg-theme-50/50 rounded-xl md:rounded-2xl border border-theme-100 text-xs space-y-1">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Required Checklist:</span>
+                        ${o.docs.map(doc => `<div class="flex items-center gap-1.5 text-slate-700 font-semibold text-[10px] xs:text-[11px]"><span>✓</span> <span class="truncate">${doc}</span></div>`).join('')}
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-2 border-t border-theme-100">
+                        <button onclick="saveOpportunityToTasks('${o.title}', '${o.deadline}')" class="touch-min-target flex-1 py-2 md:py-2.5 bg-theme-50 hover:bg-theme-100 text-theme-600 font-extrabold text-xs rounded-xl md:rounded-2xl transition-colors flex items-center justify-center gap-1 border border-theme-100">
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5 md:w-4 md:h-4"></i>
+                            <span>Save to Tracker</span>
+                        </button>
+                        <button onclick="openModal('${o.title}', 'Detailed eligibility breakdown and application workflow for ${o.title}. Value: ${o.amount}. Deadline: ${o.deadline}.', '${o.category}')" class="touch-min-target px-3 py-2 md:px-3.5 md:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl md:rounded-2xl transition-colors">
+                            Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function saveOpportunityToTasks(title, deadline) {
+            // Check if already present to prevent duplicate clutter
+            const existing = tasks.find(t => t.title === `Apply: ${title}`);
+            if (existing) {
+                openModal('Already Saved', `"${title}" is already in your Priority Responsibilities tracker!`, 'Info');
+                return;
+            }
+
+            tasks.unshift({
+                id: Date.now(),
+                title: `Apply: ${title}`,
+                course: 'Career Opportunity',
+                due: deadline,
+                duration: '1.0 hour',
+                priority: 'high',
+                completed: false
+            });
+            
+            notificationsList.unshift({
+                id: Date.now(),
+                title: 'Opportunity Tracked!',
+                text: `"${title}" has been saved to your Priority Responsibilities.`,
+                icon: 'briefcase',
+                time: 'Just now'
+            });
+
+            renderTasks();
+            renderNotifications();
+            openModal('Added to Your Tracker!', `"${title}" was successfully saved to your Priority Responsibilities and Calendar. You can cancel or remove it anytime from your Dashboard or Academics view.`, 'Opportunity Saved');
+        }
+
+        function showDataPipelineModal() {
+            openModal(
+                'How UniFlow Sources Opportunities',
+                `<div class="space-y-3 text-xs text-slate-600 leading-relaxed font-medium">
+                    <p>UniFlow uses a multi-layered automated ingestion pipeline concept to centralize opportunities:</p>
+                    <ul class="list-disc pl-4 space-y-2 font-semibold">
+                        <li><strong>University RSS & Web Crawlers:</strong> Indexes departmental financial aid pages and grant portals.</li>
+                        <li><strong>Partner API Integrations:</strong> Connects with student opportunity networks and open grant databases.</li>
+                        <li><strong>Campus Club Portals:</strong> Authorized student organization leaders post hackathons and local competitions.</li>
+                        <li><strong>NLP Email Parsing:</strong> Parses forwarded university newsletters into structured application cards.</li>
+                    </ul>
+                </div>`,
+                'Data Pipeline Concept'
+            );
+        }
+
+        // CAMPUS EVENTS
+        function renderEvents() {
+            const container = document.getElementById('events-grid');
+            container.innerHTML = campusEventsList.map(e => `
+                <div class="themed-card p-4 xs:p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-sm space-y-3 md:space-y-4">
+                    <span class="text-[9px] md:text-xs font-black text-theme-600 bg-theme-50 px-2.5 py-1 rounded-lg border border-theme-100">${e.category}</span>
+                    <h3 class="font-extrabold text-slate-900 text-xs xs:text-sm md:text-base">${e.title}</h3>
+                    <div class="space-y-1 text-xs text-slate-500 font-semibold">
+                        <p>📅 ${e.date}</p>
+                        <p>📍 ${e.location}</p>
+                    </div>
+                    <button onclick="openModal('${e.title}', 'Location: ${e.location}', '${e.category}')" class="touch-min-target w-full py-2 md:py-2.5 border border-theme-200 hover:bg-theme-50 text-slate-700 font-extrabold text-xs rounded-xl md:rounded-2xl transition-colors shadow-sm">RSVP Event</button>
+                </div>
+            `).join('');
+        }
+
+        // CONNECTED APPS MANAGER WITH IMMEDIATE STATUS TOGGLING
+        function renderIntegrations() {
+            const container = document.getElementById('integrations-list');
+            container.innerHTML = integrations.map(app => `
+                <div class="themed-card p-3.5 xs:p-4 md:p-5 rounded-2xl md:rounded-3xl shadow-sm flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5 md:gap-3 min-w-0">
+                        <div class="w-8 h-8 xs:w-9 xs:h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl ${app.connected ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-500'} border flex items-center justify-center font-black text-sm md:text-lg shrink-0 shadow-inner">
+                            ${app.icon}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <h4 class="font-extrabold text-slate-900 text-xs md:text-sm truncate">${app.name}</h4>
+                                <span class="text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-full ${app.connected ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
+                                    ${app.connected ? 'Connected' : 'Not Connected'}
+                                </span>
+                            </div>
+                            <p class="text-[10px] md:text-xs font-semibold text-slate-500 mt-0.5 leading-tight">Prototype connection — demonstrates central updates in UniFlow.</p>
+                        </div>
+                    </div>
+                    <button onclick="handleAppConnectClick('${app.id}')" class="touch-min-target px-3 py-1.5 md:px-4 md:py-2 font-extrabold text-xs rounded-xl md:rounded-2xl transition-all shrink-0 ml-1 shadow-sm ${app.connected ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-700 hover:bg-theme-600 hover:text-white'}">
+                        ${app.connected ? 'Connected' : 'Connect'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function handleAppConnectClick(appId) {
+            if (appId === 'lms') {
+                openLMSSelectionModal();
+            } else if (appId === 'custom') {
+                openCustomAppModal();
+            } else {
+                toggleAppConnection(appId);
+            }
+        }
+
+        function openCustomAppModal() {
+            openModal(
+                'Connect Custom App or Feed',
+                `<div class="space-y-3 md:space-y-4 text-xs font-medium">
+                    <p class="text-slate-500">Add any custom university portal, departmental blog, or club RSS link to demonstrate centralized sync in UniFlow.</p>
+                    <div>
+                        <label class="block font-bold text-slate-800 mb-1">Platform / App Name</label>
+                        <input type="text" id="custom-app-name" placeholder="e.g. CS Department Forum" class="w-full p-2.5 md:p-3 bg-theme-50/50 border border-theme-200 rounded-xl font-semibold">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-800 mb-1">Feed / Portal URL or iCal Link</label>
+                        <input type="url" id="custom-app-url" placeholder="https://portal.university.edu/feed" class="w-full p-2.5 md:p-3 bg-theme-50/50 border border-theme-200 rounded-xl font-semibold">
+                    </div>
+                    <div class="pt-2 flex justify-end">
+                        <button onclick="saveCustomApp()" class="touch-min-target px-4 py-2 md:px-5 md:py-2.5 bg-theme-600 text-white font-extrabold rounded-xl md:rounded-2xl shadow-md text-xs">Add Integration</button>
+                    </div>
+                </div>`,
+                'Custom Source Prototype'
+            );
+        }
+
+        function saveCustomApp() {
+            const name = document.getElementById('custom-app-name').value.trim() || 'Custom Feed';
+            integrations.push({
+                id: 'custom-' + Date.now(),
+                name: name,
+                desc: 'Prototype connected data source',
+                icon: '★',
+                connected: true
+            });
+
+            notificationsList.unshift({
+                id: Date.now(),
+                title: `${name} Connected`,
+                text: `UniFlow prototype is configured to surface updates from your custom source.`,
+                icon: 'plug',
+                time: 'Just now'
+            });
+
+            renderIntegrations();
+            renderNotifications();
+            renderOnboardingStep2Apps();
+            closeDetailModal();
+        }
+
+        function openLMSSelectionModal() {
+            openModal(
+                'Select Your LMS Platform',
+                `<div class="space-y-3">
+                    <p class="text-xs text-slate-500 font-semibold">Choose which learning management system to demonstrate in UniFlow:</p>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="setLMSPlatform('Blackboard')" class="touch-min-target p-3 bg-theme-50/50 hover:bg-theme-100 border border-theme-200 rounded-xl text-left font-extrabold text-xs text-slate-800 flex items-center justify-between transition-colors">
+                            <span>🖤 Blackboard Learn</span>
+                            <span class="text-[10px] text-theme-600 font-black">Select</span>
+                        </button>
+                        <button onclick="setLMSPlatform('Canvas')" class="touch-min-target p-3 bg-theme-50/50 hover:bg-theme-100 border border-theme-200 rounded-xl text-left font-extrabold text-xs text-slate-800 flex items-center justify-between transition-colors">
+                            <span>🔴 Canvas LMS</span>
+                            <span class="text-[10px] text-theme-600 font-black">Select</span>
+                        </button>
+                        <button onclick="setLMSPlatform('Moodle')" class="touch-min-target p-3 bg-theme-50/50 hover:bg-theme-100 border border-theme-200 rounded-xl text-left font-extrabold text-xs text-slate-800 flex items-center justify-between transition-colors">
+                            <span>🟠 Moodle</span>
+                            <span class="text-[10px] text-theme-600 font-black">Select</span>
+                        </button>
+                    </div>
+                </div>`,
+                'LMS Integration Prototype'
+            );
+        }
+
+        function setLMSPlatform(platformName) {
+            integrations = integrations.map(app => {
+                if (app.id === 'lms') {
+                    return { ...app, connected: true, activePlatform: platformName };
+                }
+                return app;
+            });
+            notificationsList.unshift({
+                id: Date.now(),
+                title: `${platformName} Connected`,
+                text: `UniFlow prototype is demonstrating assignment sync from ${platformName}.`,
+                icon: 'plug',
+                time: 'Just now'
+            });
+            renderIntegrations();
+            renderNotifications();
+            renderOnboardingStep2Apps();
+            closeDetailModal();
+        }
+
+        function toggleAppConnection(appId) {
+            integrations = integrations.map(app => {
+                if (app.id === appId) {
+                    const newState = !app.connected;
+                    notificationsList.unshift({
+                        id: Date.now(),
+                        title: newState ? `${app.name} Connected` : `${app.name} Disconnected`,
+                        text: newState ? `Prototype will now demonstrate updates from ${app.name}.` : `Demonstration paused for ${app.name}.`,
+                        icon: 'plug',
+                        time: 'Just now'
+                    });
+                    return { ...app, connected: newState };
+                }
+                return app;
+            });
+            renderIntegrations();
+            renderNotifications();
+            renderOnboardingStep2Apps();
+        }
+
+        // NOTIFICATIONS SYSTEM
+        function renderNotifications() {
+            const container = document.getElementById('notif-list');
+            if (notificationsList.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center font-semibold">No notifications right now.</p>`;
+                return;
+            }
+            container.innerHTML = notificationsList.map(n => `
+                <div class="p-2.5 md:p-3 bg-theme-50/60 rounded-xl md:rounded-2xl border border-theme-100 text-xs flex gap-2.5 items-start">
+                    <div class="p-1.5 md:p-2 bg-theme-100 text-theme-600 rounded-lg md:rounded-xl h-fit shrink-0"><i data-lucide="${n.icon}" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></div>
+                    <div class="min-w-0">
+                        <h4 class="font-extrabold text-slate-900 truncate">${n.title}</h4>
+                        <p class="text-slate-500 font-medium mt-0.5 text-[10px] xs:text-[11px] leading-snug">${n.text}</p>
+                        <span class="text-[9px] text-slate-400 font-bold mt-1 block">${n.time}</span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notif-dropdown').classList.toggle('hidden');
+        }
+
+        function clearNotifications() {
+            notificationsList = [];
+            renderNotifications();
+            document.getElementById('notif-badge').classList.add('hidden');
+        }
+
+        // PROFILE & PREFERENCES PAGE
+        function renderProfilePage() {
+            document.getElementById('profile-name').value = userProfile.name;
+            const selectField = document.getElementById('profile-field');
+            const otherInput = document.getElementById('profile-field-other');
+
+            if (['Computer Science', 'Engineering', 'Business & Finance', 'Arts & Design', 'Biology & Health'].includes(userProfile.field)) {
+                selectField.value = userProfile.field;
+                otherInput.classList.add('hidden');
+            } else {
+                selectField.value = 'Other';
+                otherInput.value = userProfile.field;
+                otherInput.classList.remove('hidden');
+            }
+
+            document.getElementById('profile-year').value = userProfile.year;
+
+            const container = document.getElementById('profile-interests-container');
+            container.innerHTML = ALL_INTERESTS.map(item => {
+                const checked = userProfile.interests.includes(item.id) ? 'checked' : '';
+                return `
+                    <label class="flex items-center gap-2 p-2.5 bg-theme-50/50 border border-theme-200 rounded-xl cursor-pointer hover:bg-theme-50 transition-colors text-xs font-semibold text-slate-700">
+                        <input type="checkbox" name="profile-interest" value="${item.id}" ${checked} class="rounded text-theme-600 focus:ring-theme-500 w-4 h-4 shrink-0">
+                        <span class="truncate">${item.label}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function saveProfilePreferences() {
+            const nameInput = document.getElementById('profile-name').value;
+            const selectField = document.getElementById('profile-field').value;
+            const otherField = document.getElementById('profile-field-other').value.trim();
+            const year = document.getElementById('profile-year').value;
+            const checkedBoxes = document.querySelectorAll('input[name="profile-interest"]:checked');
+
+            userProfile.name = nameInput || 'Alex Morgan';
+            userProfile.field = (selectField === 'Other' && otherField) ? otherField : selectField;
+            userProfile.year = year;
+            userProfile.interests = Array.from(checkedBoxes).map(cb => cb.value);
+
+            const status = document.getElementById('profile-save-status');
+            status.classList.remove('hidden');
+            setTimeout(() => status.classList.add('hidden'), 2500);
+
+            renderAll();
+        }
+
+        // MODAL & GLOBAL SEARCH
+        function openModal(title, text, cat) {
+            const content = document.getElementById('modal-content');
+            content.innerHTML = `
+                <span class="text-[8px] xs:text-[9px] md:text-[10px] font-black text-theme-600 bg-theme-50 border border-theme-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">${cat}</span>
+                <h3 class="text-base xs:text-lg md:text-xl font-black text-slate-900 mt-1.5 md:mt-2 tracking-tight break-words">${title}</h3>
+                <div class="text-slate-600 text-xs md:text-sm mt-2 md:mt-3 leading-relaxed font-medium break-words">${text}</div>
+                <div class="pt-3 md:pt-4 border-t border-slate-100 flex justify-end">
+                    <button onclick="closeDetailModal()" class="touch-min-target px-4 py-2 md:px-5 md:py-2.5 bg-theme-600 text-white font-extrabold text-xs rounded-xl md:rounded-2xl shadow-md">Close</button>
+                </div>
+            `;
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        function handleGlobalSearch(query) {
+            if (!query.trim()) return;
+            switchView('announcements');
+            const q = query.toLowerCase();
+            const container = document.getElementById('announcements-grid');
+            const matched = announcements.filter(a => a.title.toLowerCase().includes(q) || a.description.toLowerCase().includes(q));
+            
+            if (matched.length === 0) {
+                container.innerHTML = `<div class="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-8 text-xs text-slate-500 font-semibold">No announcements found matching "${query}"</div>`;
+                return;
+            }
+
+            container.innerHTML = matched.map(a => `
+                <div class="themed-card p-4 xs:p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">${a.category}</span>
+                        <h3 class="font-extrabold text-slate-900 text-xs xs:text-sm mt-2 break-words">${a.title}</h3>
+                        <p class="text-xs text-slate-500 font-medium mt-1 leading-relaxed">${a.description}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
