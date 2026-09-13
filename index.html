@@ -168,6 +168,38 @@
             min-height: 44px;
             min-width: 44px;
         }
+
+        /* HERO ENTRANCE MOTION */
+        @keyframes hero-rise {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero-fade {
+            opacity: 0;
+            animation: hero-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .hero-fade-1 { animation-delay: 0.05s; }
+        .hero-fade-2 { animation-delay: 0.15s; }
+        .hero-fade-3 { animation-delay: 0.28s; }
+        .hero-fade-4 { animation-delay: 0.42s; }
+        .hero-fade-5 { animation-delay: 0.55s; }
+
+        /* AMBIENT FLOATING BACKGROUND SHAPES */
+        @keyframes float-drift-a {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-14px, 16px) scale(1.06); }
+        }
+        @keyframes float-drift-b {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(12px, -14px) scale(1.08); }
+        }
+        .float-shape-a { animation: float-drift-a 9s ease-in-out infinite; }
+        .float-shape-b { animation: float-drift-b 11s ease-in-out infinite; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-fade { opacity: 1; animation: none; }
+            .float-shape-a, .float-shape-b { animation: none; }
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -431,7 +463,7 @@
                         </nav>
                     </div>
                     <button onclick="switchView('profile'); toggleMobileMenu();" class="w-full flex items-center gap-3 p-3 bg-theme-50 rounded-xl border border-theme-200 mt-4">
-                        <div class="w-8 h-8 rounded-xl bg-theme-600 text-white font-bold flex items-center justify-center text-xs shrink-0">AM</div>
+                        <div id="mobile-user-avatar" class="w-8 h-8 rounded-xl bg-theme-600 text-white font-bold flex items-center justify-center text-xs shrink-0">AM</div>
                         <div class="text-left text-xs min-w-0">
                             <p id="mobile-user-name" class="font-black text-slate-800 truncate">Alex Morgan</p>
                             <p class="text-slate-500 font-semibold truncate">Edit Preferences</p>
@@ -450,8 +482,8 @@
                     <div class="vibrant-mesh-bg text-white pt-6 xs:pt-8 pb-12 md:pt-12 md:pb-20 px-3 xs:px-4 md:px-12 relative overflow-hidden shadow-xl">
                         
                         <!-- Floating organic circles in background -->
-                        <div class="absolute -top-10 -right-10 w-48 xs:w-64 md:w-96 h-48 xs:h-64 md:h-96 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-                        <div class="absolute bottom-0 left-1/4 w-36 xs:w-48 md:w-80 h-36 xs:h-48 md:h-80 bg-yellow-400/20 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="float-shape-a absolute -top-10 -right-10 w-48 xs:w-64 md:w-96 h-48 xs:h-64 md:h-96 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="float-shape-b absolute bottom-0 left-1/4 w-36 xs:w-48 md:w-80 h-36 xs:h-48 md:h-80 bg-yellow-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
                         <div class="max-w-5xl mx-auto space-y-4 md:space-y-6 relative z-10">
                             
@@ -471,19 +503,19 @@
                                 </button>
                             </div>
 
-                            <div class="inline-flex items-center gap-1.5 xs:gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] xs:text-[11px] md:text-xs font-black text-white border border-white/30 shadow-sm max-w-full">
+                            <div class="inline-flex items-center gap-1.5 xs:gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] xs:text-[11px] md:text-xs font-black text-white border border-white/30 shadow-sm max-w-full hero-fade hero-fade-1">
                                 <span class="shrink-0">✨</span> <span class="truncate">Intelligent Student OS Prototype</span>
                             </div>
 
-                            <h1 class="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-tight max-w-3xl break-words">
+                            <h1 class="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-tight max-w-3xl break-words hero-fade hero-fade-2">
                                 One Central App For All Your Student Life Needs
                             </h1>
 
-                            <p class="text-white/90 text-xs sm:text-sm md:text-lg max-w-2xl font-semibold leading-relaxed">
+                            <p class="text-white/90 text-xs sm:text-sm md:text-lg max-w-2xl font-semibold leading-relaxed hero-fade hero-fade-3">
                                 Stop juggling disparate campus platforms. UniFlow merges assignment deadlines, club announcements, and high-value scholarships into one clean, interactive feed.
                             </p>
 
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 md:gap-3 pt-2 md:pt-4">
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 md:gap-3 pt-2 md:pt-4 hero-fade hero-fade-4">
                                 <button id="home-primary-btn" onclick="handleHomePrimaryClick()" class="touch-min-target px-5 py-3 md:px-8 md:py-4 bg-white text-theme-600 hover:bg-theme-50 active:scale-95 font-black rounded-xl md:rounded-2xl shadow-2xl transition-all flex items-center justify-center gap-2.5 text-xs md:text-sm">
                                     <span id="home-btn-text">Sign In / Personalize Profile</span>
                                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -640,12 +672,12 @@
                     </div>
 
                     <div class="flex items-center gap-1.5 xs:gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                        <button onclick="filterAnnouncements('All')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-black bg-theme-600 text-white shadow-md shadow-theme-500/20 whitespace-nowrap transition-all">All</button>
-                        <button onclick="filterAnnouncements('Academics')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Academics</button>
-                        <button onclick="filterAnnouncements('Opportunities')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Opportunities</button>
-                        <button onclick="filterAnnouncements('Events')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Events</button>
-                        <button onclick="filterAnnouncements('Careers')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Careers</button>
-                        <button onclick="filterAnnouncements('Scholarships')" class="ann-filter-btn touch-min-target px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Scholarships</button>
+                        <button onclick="filterAnnouncements('All')" class="ann-filter-btn touch-min-target shrink-0 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-black bg-theme-600 text-white shadow-md shadow-theme-500/20 whitespace-nowrap transition-all">All</button>
+                        <button onclick="filterAnnouncements('Academics')" class="ann-filter-btn touch-min-target shrink-0 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Academics</button>
+                        <button onclick="filterAnnouncements('Opportunities')" class="ann-filter-btn touch-min-target shrink-0 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Opportunities</button>
+                        <button onclick="filterAnnouncements('Events')" class="ann-filter-btn touch-min-target shrink-0 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Events</button>
+                        <button onclick="filterAnnouncements('Careers')" class="ann-filter-btn touch-min-target shrink-0 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Careers</button>
+                        <button onclick="filterAnnouncements('Scholarships')" class="ann-filter-btn touch-min-target shrink-0 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl text-xs font-extrabold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-all">Scholarships</button>
                     </div>
 
                     <div id="announcements-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 xs:gap-4 md:gap-6">
@@ -1266,6 +1298,7 @@
             document.getElementById('sidebar-user-name').innerText = userName;
             document.getElementById('mobile-user-name').innerText = userName;
             document.getElementById('user-avatar').innerText = getInitials(userName);
+            document.getElementById('mobile-user-avatar').innerText = getInitials(userName);
             document.getElementById('user-profile-sub').innerText = `${userProfile.field} · ${userProfile.year}`;
         }
 
