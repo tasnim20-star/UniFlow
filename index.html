@@ -205,7 +205,7 @@
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
     <!-- PUBLIC LANDING TOP HEADER (Visible before Signing In) -->
-    <header id="public-header" class="h-16 md:h-20 bg-white border-b border-theme-200 px-4 md:px-12 flex items-center justify-between shrink-0 z-30 shadow-sm w-full">
+    <header id="public-header" class="relative h-16 md:h-20 bg-white border-b border-theme-200 px-4 md:px-12 flex items-center justify-between shrink-0 z-30 shadow-sm w-full">
         <div class="flex items-center gap-2 md:gap-3">
             <div class="bg-theme-600 text-white p-2 md:p-2.5 rounded-xl md:rounded-2xl shadow-lg shadow-theme-500/30 shrink-0">
                 <i data-lucide="layers" class="w-5 h-5 md:w-6 md:h-6"></i>
@@ -399,7 +399,7 @@
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
             
             <!-- HEADER BAR (Hidden until user Signs In) -->
-            <header id="app-header" class="hidden h-16 md:h-20 border-b border-theme-200 bg-white px-3 xs:px-4 md:px-8 items-center justify-between shrink-0 shadow-sm z-10">
+            <header id="app-header" class="hidden relative h-16 md:h-20 border-b border-theme-200 bg-white px-3 xs:px-4 md:px-8 items-center justify-between shrink-0 shadow-sm z-30">
                 <div class="flex items-center gap-2.5 md:gap-4 min-w-0">
                     <button onclick="toggleMobileMenu()" aria-label="Open navigation menu" class="lg:hidden touch-min-target p-2 rounded-xl text-slate-700 bg-theme-50 border border-theme-100 hover:bg-theme-100 shrink-0">
                         <i data-lucide="menu" class="w-5 h-5"></i>
@@ -424,7 +424,7 @@
                             <span id="notif-badge" class="absolute top-1.5 right-1.5 w-2 h-2 md:w-2.5 md:h-2.5 bg-theme-600 rounded-full border-2 border-white"></span>
                         </button>
                         
-                        <div id="notif-dropdown" class="hidden absolute right-0 mt-3 w-72 xs:w-80 sm:w-96 bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-theme-100 z-50 p-4 md:p-5 space-y-3">
+                        <div id="notif-dropdown" class="hidden absolute right-0 mt-3 w-72 xs:w-80 sm:w-96 bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-theme-100 z-[100] p-4 md:p-5 space-y-3">
                             <div class="flex items-center justify-between pb-2 border-b border-theme-100">
                                 <h3 class="font-black text-slate-900 text-xs md:text-sm">Notifications</h3>
                                 <button onclick="clearNotifications()" class="text-[11px] md:text-xs font-extrabold text-theme-600 hover:underline">Clear all</button>
@@ -1254,6 +1254,18 @@
             lucide.createIcons();
         });
 
+        // Close the notifications dropdown when clicking anywhere outside it or its bell button
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('notif-dropdown');
+            if (!dropdown || dropdown.classList.contains('hidden')) return;
+            const bellButton = e.target.closest('[onclick="toggleNotifications()"]');
+            const insideDropdown = e.target.closest('#notif-dropdown');
+            if (!bellButton && !insideDropdown) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+
         function toggleCustomField(context) {
             const select = document.getElementById(`${context}-field`);
             const otherInput = document.getElementById(`${context}-field-other`);
@@ -1446,6 +1458,11 @@
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.add('hidden'));
             const target = document.getElementById(`view-${viewId}`);
             if (target) target.classList.remove('hidden');
+
+            // Close the notifications dropdown whenever the page changes, so it never
+            // lingers open and floats over content on the new view.
+            const notifDropdown = document.getElementById('notif-dropdown');
+            if (notifDropdown) notifDropdown.classList.add('hidden');
 
             document.querySelectorAll('.nav-item').forEach(btn => {
                 btn.classList.remove('bg-theme-50', 'text-theme-600', 'font-black', 'shadow-sm', 'border', 'border-theme-100');
